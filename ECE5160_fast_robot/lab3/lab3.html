@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab3: ToF</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab3: ToF</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+      <h2 class="mb-3">Lab 3</h2>
+
+      <h3 class="h5">Goals</h3>
+      <ol>
+        The goal of this lab is to equip the robot with distance sensors and prepare for the future labs.
+      </ol>
+
+<h3 class="h5 mt-4">Prelab</h3>
+<ol>
+  <li>
+    I2C address: The VL53L1X uses the default 7-bit I2C address <code>0x29</code>.
+  </li>
+  <li>
+    Using two ToF sensors: Since both sensors share <code>0x29</code>, I will use the XSHUT pins to
+    enable one sensor at a time, assign it a new I2C address in software, then enable the second sensor
+    and assign a different address so both can run on the same bus.
+  </li>
+  <li>
+    Placement & missed obstacles: I will mount the sensors on the front-left and front-right of the
+    robot to widen coverage. The robot may still miss thin objects (e.g., chair legs), low obstacles
+    below sensor height, transparent/reflective surfaces (glass/mirrors), or obstacles at steep angles
+    that reflect IR away from the receiver.
+  </li>
+         <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/18.jpg"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 400px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1 sketch of wiring
+      </figcaption>
+    </figure>
+</ol>
+      <h2>Lab Tasks</h2>
+      <hr/>
+
+      <h3>Battery</h3>
+      <ol>
+     I powered the Artemis with a 650mAh battery and a JST connector. I separated and cut the two battery wires one at a time to prevent short circuits, then soldered them to the JST jumper and insulated the joints with heat shrink tubing. After verifying the correct polarity, I powered the board using only the battery and confirmed normal wireless operation through BLE communication.
+
+      </ol>
+       <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.jpg"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 400px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 2 battery
+      </figcaption>
+    </figure>
+
+
+
+      <h3>ToF Sensor Setup and Connection</h3>
+      <ol>
+
+  
+In this step, I installed the SparkFun VL53L1X 4m Laser Distance Sensor library using the Arduino Library Manager. I connected the QWIIC breakout board to the SparkFun Artemis and attached the first ToF sensor using a QWIIC cable. After selecting a suitable cable length, I cut one end and soldered it to the sensor. Following the QWIIC standard, I connected the blue wire to SDA, the yellow wire to SCL, the red wire to 3.3V, and the black wire to GND. Since the sensor uses I²C communication, correct wiring of SDA and SCL was essential. After verifying the solder connections, the physical setup was completed.
+    </ol>
+          <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/2.jpg"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 400px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 3 SparkFun connected with distance sensors.
+      </figcaption>
+    </figure>
+
+ 
+      <h3>I2C Scan and Address Verification</h3>
+      <ol>
+
+  
+I opened Example05_wire_I2C from the Apollo3 Wire examples and ran the code to scan the I2C bus. The sensor’s I2C address was successfully detected and matched the expected default address, confirming proper communication.
+          <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/3.png"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 4 I2C Scan Result Showing Detected Devices.
+      </figcaption>
+    </figure>
+
+      <h3>ToF Distance Modes Comparison </h3>
+      <ol>
+  
+I reviewed the three VL53L1X distance modes and their trade-offs. Short mode (~1.3 m) typically provides faster and more stable readings at close range, making it suitable for near-field obstacle detection. Medium mode (~3 m, Pololu library only) offers a balance between range and robustness. Long mode (~4 m, default) extends the sensing distance but can be more sensitive to low reflectivity surfaces and ambient conditions, sometimes leading to noisier measurements. For the final robot, a shorter or medium range is often more practical for reliable wall/obstacle avoidance in indoor environments, while long mode is useful if longer look-ahead distance is needed.
+
+      <h3>ToF Mode Testing and Characterization</h3>
+<ol>
+  <li>
+    I tested the selected ToF distance mode using the SparkFun example
+    <code>Example1_ReadDistance</code>. I collected repeated measurements at several known
+    true distances (60, 180, 300, 420, and 540 mm), logged the data to CSV, and analyzed
+    the range performance in Python by computing the mean, standard deviation (repeatability),
+    measurement error, and average ranging time per sample.
+  </li>
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/5.png"
+       alt="ToF summary table (mean/std/error/timing)"
+       style="max-width: 800px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 5 ToF Summary Statistics and Ranging Time Across Test Distances.
+  </figcaption>
+</figure>
+
+<figure class="mt-3 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/6.png"
+       alt="ToF error versus true distance plot"
+       style="max-width: 600px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 6 ToF Error vs. True Distance.
+  </figcaption>
+</figure>
+
+<figure class="mt-3 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/7.png"
+       alt="ToF mean measured distance versus true distance plot"
+       style="max-width: 600px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 7 ToF Mean Measured Distance vs. True Distance.
+  </figcaption>
+</figure>
+
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/1e8302a4c005cb3a106fd766248c6bf5"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+<h3>Dual ToF Sensor Bring-Up (Simultaneous Operation)</h3>
+<ol>
+  <li>
+    Using the pre-lab setup strategy, I connected two VL53L1X ToF sensors on the same I2C bus
+    and brought them up simultaneously by assigning distinct I2C addresses (e.g., 0x29 and 0x30).
+    I verified that both sensors were streaming distance readings in real time, demonstrating that
+    they can operate together reliably without using the <code>Example05_wire_I2C</code> scanner (which is
+    not recommended for multi-sensor setups).
+  </li>
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/8.png"
+       alt="Two ToF sensors running simultaneously with different I2C addresses"
+       style="max-width: 800px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 8 Simultaneous Readout from Two ToF Sensors (0x29 and 0x30).
+  </figcaption>
+</figure>
+</code></pre>
+
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/dcec3bb342c0c8597dbfe1c40a9c7e8d"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+
+<h3>Non-Blocking Dual ToF Readout (Fast Loop Timing)</h3>
+<ol>
+  <li>
+    I implemented a non-blocking loop that continuously prints the Artemis timestamp and only outputs new ToF
+    measurements when <code>checkForDataReady()</code> returns true. This prevents the code from hanging while
+    waiting for sensor measurements. Based on the serial output, the loop runs in approximately 2–3 ms per iteration,
+    with serial printing speed being the main limiting factor.
+  </li>
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/9.png"
+       alt="Serial monitor showing fast Artemis clock output and non-blocking ToF updates with loop timing"
+       style="max-width: 800px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 9 Fast Non-Blocking Loop with Conditional ToF Data Updates.
+  </figcaption>
+</figure>
+</code></pre>
+
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/36ffd48d333dee852efdcd034125d865"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+
+<h3>Time-Stamped ToF and IMU Data Logging over BLE</h3>
+<ol>
+  <li>
+    I modified the Lab 1 code to record synchronized, time-stamped ToF and IMU data for a fixed duration.
+    During the sampling period, the Artemis collected sensor readings and stored them in a buffer with
+    microsecond timestamps. After the recording window completed, the data were transmitted over BLE
+    to the computer in structured CSV format.
+  </li>
+  <li>
+    On the Python side, I received multiple lines of data, verified successful transmission, and saved
+    the dataset to <code>task10.csv</code> for further analysis. The output confirms that time, ToF,
+    and IMU measurements were logged continuously and sent reliably via Bluetooth.
+  </li>
+</ol>
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/10.png"
+       alt="BLE time-stamped ToF and IMU data received and saved to CSV"
+       style="max-width: 800px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 10 Time-Stamped ToF and IMU Data Received over BLE and Saved to CSV.
+  </figcaption>
+</figure>
+
+<h3>ToF and IMU Plots vs Time</h3>
+<ol>
+  <li>
+    I plotted the recorded ToF distance measurements against time to visualize how the range readings
+    changed during the sampling window.
+  </li>
+  <li>
+    I also plotted the IMU signals (accelerometer and gyroscope axes) against time. The traces appear
+    irregular because I intentionally moved/shook the sensor during data collection to generate
+    noticeable dynamics in the IMU measurements.
+  </li>
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/11.png"
+       alt="ToF distance versus time plot"
+       style="max-width: 600px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 11 ToF Distance vs. Time.
+  </figcaption>
+</figure>
+
+<figure class="mt-3 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/12.png"
+       alt="IMU accelerometer and gyroscope versus time plot"
+       style="max-width: 600px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 12 IMU (Accelerometer and Gyroscope) vs. Time.
+  </figcaption>
+</figure>
+
+<h3>ToF Surface Sensitivity Test (5000-level)</h3>
+<ol>
+  <li>
+    I compared infrared-based distance sensing approaches. Conventional IR proximity sensors estimate
+    distance from reflected intensity, which is simple and low-cost but strongly affected by surface
+    reflectivity/color and ambient lighting. In contrast, a Time-of-Flight (ToF) sensor measures range
+    from the travel time of emitted IR pulses, which is generally more robust to lighting and less
+    dependent on surface appearance, though return strength can still affect stability.
+  </li>
+  <li>
+    To evaluate ToF sensitivity to surface color/texture, I fixed the sensor-to-surface distance using
+    the long edge of an ID card as a spacer and tested three surfaces (black smooth, white wall, and
+    yellow rough). The results show valid measurements across all cases with small differences in
+    measurement variability, suggesting ToF is less color-sensitive than intensity-based IR sensors
+    but surface properties can still slightly influence measurement stability.
+  </li>
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/13.png"
+       alt="ToF surface sensitivity test summary (black smooth, white wall, yellow rough)"
+       style="max-width: 800px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 13 ToF sensitivity to surface color/texture (black smooth, white wall, yellow rough).
+  </figcaption>
+</figure>
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/de9f2c2b91cb51687cef0e2e8f66029d"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+
+
+
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>

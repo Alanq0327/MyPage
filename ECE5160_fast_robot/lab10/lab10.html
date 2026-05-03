@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab 10: Grid Localization using Bayes Filter</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab 10: Grid Localization using Bayes Filter</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+
+
+      <h3 class="h5">Goals</h3>
+      <ol>  
+      This lab aimed to implement and evaluate a Bayes filter for grid-based robot localization in simulation.
+  The goal was to estimate the robot’s pose <em>(x, y, θ)</em> more accurately than odometry alone by combining motion updates with range-based observation updates.
+      </ol>
+       
+
+<h2 class="h3 mt-4">Mathematical Principles</h2>
+
+<h3 class="h4 mt-4">Bayes Filter</h3>
+<p>
+  The Bayes filter updates the robot belief in two stages. First, the previous belief is propagated using the motion model and odometry input.
+  Then, the predicted belief is corrected using sensor observations.
+</p>
+
+<div class="text-center my-4 p-3 border rounded bg-light">
+  <p class="mb-2"><strong>Algorithm</strong> Bayes_Filter (<em>bel(x<sub>t-1</sub>)</em>, <em>u<sub>t</sub></em>, <em>z<sub>t</sub></em>)</p>
+  <p class="mb-2"><strong>for all</strong> <em>x<sub>t</sub></em> <strong>do</strong></p>
+  <p class="mb-2">
+    <em>&#772;bel(x<sub>t</sub>) = &Sigma;<sub>x<sub>t-1</sub></sub> p(x<sub>t</sub> | u<sub>t</sub>, x<sub>t-1</sub>) bel(x<sub>t-1</sub>)</em>
+  </p>
+  <p class="mb-2">
+    <em>bel(x<sub>t</sub>) = &eta; p(z<sub>t</sub> | x<sub>t</sub>) &#772;bel(x<sub>t</sub>)</em>
+  </p>
+  <p class="mb-0"><strong>end for</strong></p>
+</div>
+
+<ol>
+  <li><strong>Prediction Step:</strong> propagate the belief according to robot motion and odometry.</li>
+  <li><strong>Update Step:</strong> correct the predicted belief using range-based sensor observations.</li>
+</ol>
+
+<h3 class="h4 mt-4">Odometry Motion Model</h3>
+<p>
+  Each robot motion is decomposed into three components:
+  <em>(rot1, trans, rot2)</em>, corresponding to the initial rotation, translation, and final rotation.
+</p>
+
+<div class="text-center my-4 p-3 border rounded bg-light">
+  <p class="mb-2"><em>u = (rot1, trans, rot2)</em></p>
+  <p class="mb-2"><em>trans = &radic;((x<sub>t</sub> - x<sub>t-1</sub>)<sup>2</sup> + (y<sub>t</sub> - y<sub>t-1</sub>)<sup>2</sup>)</em></p>
+  <p class="mb-2"><em>rot1 = atan2(y<sub>t</sub> - y<sub>t-1</sub>, x<sub>t</sub> - x<sub>t-1</sub>) - &theta;<sub>t-1</sub></em></p>
+  <p class="mb-0"><em>rot2 = &theta;<sub>t</sub> - &theta;<sub>t-1</sub> - rot1</em></p>
+</div>
+
+<p>
+  Since odometry is noisy, the transition probability is modeled with Gaussian distributions:
+</p>
+
+<div class="text-center my-4 p-3 border rounded bg-light">
+  <p class="mb-0">
+    <em>p(x<sub>t</sub> | u<sub>t</sub>, x<sub>t-1</sub>) = p(rot1) &middot; p(trans) &middot; p(rot2)</em>
+  </p>
+</div>
+
+<h3 class="h4 mt-4">Sensor Model</h3>
+<p>
+  For each candidate state, the expected observation is compared with the measured observation. The measurement noise is modeled by a Gaussian distribution.
+</p>
+
+<div class="text-center my-4 p-3 border rounded bg-light">
+  <p class="mb-2"><em>p(z<sub>t</sub> | x<sub>t</sub>) = &Pi;<sub>k=1</sub><sup>18</sup> p(z<sub>t</sub><sup>k</sup> | x<sub>t</sub>)</em></p>
+</div>
+
+<p>
+  Therefore, the update step favors the state whose expected sensor readings best match the actual 18 range measurements.
+</p>
+
+<h3 class="h4 mt-4">Normalization and Angle Handling</h3>
+<p>
+  After each prediction and update step, the belief grid is normalized so that the total probability remains equal to one.
+  In addition, angle differences are always normalized to the principal range to avoid misleading orientation errors caused by periodicity.
+</p>
+
+
+<h2 class="h3 mt-4">Algorithm Implementation</h2>
+
+<h3 class="h4 mt-4">Step 1: Compute Control Input</h3>
+<p>
+  The first step is to extract the odometry control input from two consecutive poses. Following the odometry motion model,
+  each motion is decomposed into three terms: <em>rot1</em>, <em>trans</em>, and <em>rot2</em>. This function converts the
+  current and previous pose into the control tuple used later in the prediction step.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+def compute_control(cur_pose, prev_pose):
+    x_prev, y_prev, yaw_prev = prev_pose
+    x_cur, y_cur, yaw_cur = cur_pose
+
+    dx = x_cur - x_prev
+    dy = y_cur - y_prev
+
+    delta_trans = math.hypot(dx, dy)
+    heading = math.degrees(math.atan2(dy, dx))
+    delta_rot_1 = mapper.normalize_angle(heading - yaw_prev)
+    delta_rot_2 = mapper.normalize_angle(yaw_cur - yaw_prev - delta_rot_1)
+
+    return delta_rot_1, delta_trans, delta_rot_2
+</code></pre>
+
+<h3 class="h4 mt-4">Step 2: Implement the Odometry Motion Model</h3>
+<p>
+  After obtaining the control tuple, the motion model is used to evaluate the probability of transitioning from a previous state
+  to a current state. The discrepancy between the actual odometry control and the control implied by a candidate transition is
+  modeled with Gaussian distributions. The final motion likelihood is the product of the rotation and translation probabilities.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+def odom_motion_model(cur_pose, prev_pose, u):
+    rot1_u, trans_u, rot2_u = u
+    rot1_hat, trans_hat, rot2_hat = compute_control(cur_pose, prev_pose)
+
+    rot1_err = mapper.normalize_angle(rot1_hat - rot1_u)
+    trans_err = trans_hat - trans_u
+    rot2_err = mapper.normalize_angle(rot2_hat - rot2_u)
+
+    prob_rot1 = loc.gaussian(rot1_err, 0, loc.odom_rot_sigma)
+    prob_trans = loc.gaussian(trans_err, 0, loc.odom_trans_sigma)
+    prob_rot2 = loc.gaussian(rot2_err, 0, loc.odom_rot_sigma)
+
+    prob = prob_rot1 * prob_trans * prob_rot2
+    return prob
+</code></pre>
+
+<h3 class="h4 mt-4">Step 3: Prediction Step</h3>
+<p>
+  In the prediction step, the previous belief distribution is propagated to produce the prior belief <em>bel&#772;</em>.
+  For each possible previous state, the motion model is evaluated against every candidate current state, and the resulting
+  probability mass is accumulated into the new belief grid. To reduce runtime, very low-probability states are skipped.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+def prediction_step(cur_odom, prev_odom):
+    u = compute_control(cur_odom, prev_odom)
+    loc.bel_bar = np.zeros_like(loc.bel)
+
+    nx, ny, na = loc.bel.shape
+
+    for prev_ix in range(nx):
+        for prev_iy in range(ny):
+            for prev_it in range(na):
+                prev_bel = loc.bel[prev_ix, prev_iy, prev_it]
+
+                if prev_bel < 1e-4:
+                    continue
+
+                prev_pose = mapper.from_map(prev_ix, prev_iy, prev_it)
+
+                for cur_ix in range(nx):
+                    for cur_iy in range(ny):
+                        for cur_it in range(na):
+                            cur_pose = mapper.from_map(cur_ix, cur_iy, cur_it)
+                            p = odom_motion_model(cur_pose, prev_pose, u)
+                            loc.bel_bar[cur_ix, cur_iy, cur_it] += p * prev_bel
+
+    s = np.sum(loc.bel_bar)
+    if s > 0:
+        loc.bel_bar = loc.bel_bar / s
+</code></pre>
+
+<h3 class="h4 mt-4">Step 4: Sensor Model</h3>
+<p>
+  The sensor model compares the measured observation with the expected observation of a candidate state. Since the robot collects
+  18 range measurements during one observation loop, the function returns 18 individual likelihood values. Both arrays are flattened
+  first to avoid shape mismatch between <em>(18, 1)</em> and <em>(18,)</em>.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+def sensor_model(obs):
+    z = np.array(loc.obs_range_data).flatten()
+    obs = np.array(obs).flatten()
+
+    prob_array = loc.gaussian(z, obs, loc.sensor_sigma)
+    return prob_array
+</code></pre>
+
+<h3 class="h4 mt-4">Step 5: Update Step</h3>
+<p>
+  In the update step, the prior belief is corrected using sensor observations. For each grid cell, the expected observation is
+  retrieved from the map, passed through the sensor model, and combined into a single likelihood by multiplying the 18 individual
+  probabilities. This likelihood is then multiplied by the prior belief and normalized to produce the posterior belief.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+def update_step():
+    new_bel = np.zeros_like(loc.bel)
+    nx, ny, na = loc.bel.shape
+
+    for ix in range(nx):
+        for iy in range(ny):
+            for it in range(na):
+                obs = mapper.get_views(ix, iy, it)
+                prob_array = sensor_model(obs)
+                likelihood = np.prod(prob_array)
+                new_bel[ix, iy, it] = likelihood * loc.bel_bar[ix, iy, it]
+
+    s = np.sum(new_bel)
+    if s > 0:
+        loc.bel = new_bel / s
+    else:
+        loc.bel = new_bel
+</code></pre>
+
+<h3 class="h4 mt-4">Step 6: Error Evaluation and Angle Normalization</h3>
+<p>
+  During debugging, the prediction and update statistics were printed after every iteration. To make the orientation error physically
+  meaningful, the yaw difference was normalized instead of directly subtracted. This avoided misleading large values such as 350°
+  when the true angular error was only 10°.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+pos_error = np.array([
+    current_gt[0] - current_belief[0],
+    current_gt[1] - current_belief[1],
+    self.mapper.normalize_angle(current_gt[2] - current_belief[2])
+])
+</code></pre>
+
+<h3 class="h4 mt-4">Step 7: Running the Complete Bayes Filter</h3>
+<p>
+  After implementing all the above functions, the complete localization loop was executed over the full trajectory. At each time step,
+  the robot first moved according to the predefined trajectory, then the prediction step propagated the belief using odometry, and
+  finally the update step corrected the estimate using sensor observations.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-python">
+traj = Trajectory(loc)
+
+for t in range(0, traj.total_time_steps):
+    prev_odom, current_odom, prev_gt, current_gt = traj.execute_time_step(t)
+
+    prediction_step(current_odom, prev_odom)
+    loc.print_prediction_stats(plot_data=True)
+
+    loc.get_observation_data()
+    update_step()
+    loc.print_update_stats(plot_data=True)
+</code></pre>
+
+<h2 class="h3 mt-4">Simulation Results</h2>
+
+<p>
+  The completed Bayes filter was evaluated on the predefined simulation trajectory. During the experiment, the odometry trajectory,
+  ground-truth trajectory, and belief-based localization trajectory were visualized simultaneously in the trajectory plotter. The
+  results show that odometry alone accumulated noticeable drift over time, while the Bayes filter was able to correct this drift by
+  incorporating range-based observations. In most iterations, the update step reduced both the position and orientation error compared
+  with the prediction step, indicating that the observation model successfully refined the prior belief.
+</p>
+
+<figure class="mt-2 mb-3 text-center">
+  <video class="img-fluid rounded border d-block mx-auto" controls style="max-width: 520px;">
+    <source src="figures/1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 1. Simulation-based localization results along the full trajectory.
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/1.png" alt="trajectory comparison of odometry, ground truth, and belief" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 1. Trajectory comparison of odometry, ground truth, and belief-based localization in simulation.
+  </figcaption>
+</figure>
+
+<p>
+  As shown in Figure 1, the odometry-only trajectory deviated significantly from the true path due to accumulated motion error, while the
+  belief-based estimate remained much closer to the ground truth. This confirms that the prediction step alone was insufficient for accurate
+  localization, but the update step effectively corrected the estimated pose using sensor measurements. In addition, the final orientation
+  error remained within a reasonable range after angle normalization, which further demonstrates that the localization framework worked
+  reliably in simulation.
+</p>
+
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>

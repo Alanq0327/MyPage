@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab 11: Localization on the Real Robot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab 11: Localization on the Real Robot</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+      <h2 class="mb-3">Lab 11</h2>
+
+      <h3 class="h5">Goals</h3>
+      <p> 
+        The goal of this lab is to perform localization on the real robot using a Bayes filter, relying only on a full 360° ToF scan for the update step. It also aims to highlight the gap between simulation and real-world performance, especially under noisy sensing and motion conditions.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="h3 mt-4">Simulation result</h2>
+      <p>
+        I started by verifying that the lab11_sim.ipynb file successfully produces the same localization results as from lab 10.
+</p>
+
+<p>
+  The simulation results show that the Bayes filter can use observation data to update the robot pose in a generally stable way within the virtual environment. Although there are still some deviations among the trajectories and local errors at certain positions, the overall motion pattern remains consistent with the map geometry, indicating that the observation model and update process are working properly in simulation. Overall, this provides a reasonable baseline for localization under ideal conditions and serves as a useful reference before applying the same method to the real robot.
+</p>
+
+
+
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/1.png" alt="trajectory comparison of odometry, ground truth, and belief" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 1. Simulation result of Bayes filter localization with odometry, ground truth, and belief trajectories.
+  </figcaption>
+</figure>
+ </section>
+    <section>
+      <h2 class="h3 mt-4">Robot implementation</h2>
+<h3 class="h4 mt-4">Arduino code modification</h3>
+<p>
+The Arduino code for Lab 11 was developed based on the Lab 9 mapping program. 
+The original Lab 9 version already included motor control, yaw-based turning, and scan logging, so the main work in Lab 11 was to extend this framework for localization. 
+The key modifications were the addition of localization scan states, a dedicated BLE command to start the observation loop, and a service routine that rotates the robot through fixed headings and records one ToF reading at each step.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-cpp">
+// Added Lab 11 localization scan states
+bool loc_active = false;
+int loc_step = 0;
+float loc_readings[18];
+unsigned long loc_last_step_time = 0;
+#define LOC_STABILIZE_MS 500
+</code></pre>
+
+<p>
+First, new state variables were introduced to manage the localization scan. 
+These variables track whether the scan is active, the current angular step, and the ToF readings collected during the 360-degree rotation.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-cpp">
+case GET_TOF_DATA:
+  Serial.println("Command: GET_TOF_DATA");
+  loc_step = 0;
+  yaw_deg = 0;
+  loc_active = true;
+  loc_last_step_time = millis();
+  break;
+</code></pre>
+
+<p>
+Second, a new BLE command was added so that the robot could enter a localization-specific scan mode instead of using only the mapping procedure from Lab 9.
+</p>
+
+<pre class="bg-light p-3 rounded border" style="max-height: 320px; overflow-y: auto;"><code class="language-cpp">
+void localization_service() {
+    if (!loc_active) return;
+
+    float target_yaw = loc_step * 20.0;
+    yaw_target_deg = target_yaw;
+    yaw_ctrl_active = true;
+
+    if (abs(wrap_angle_deg(yaw_target_deg - yaw_deg)) < 3.0) {
+        if (millis() - loc_last_step_time > LOC_STABILIZE_MS) {
+            loc_readings[loc_step] = (float)current_tof_reading;
+            loc_step++;
+            loc_last_step_time = millis();
+
+            if (loc_step >= 18) {
+                loc_active = false;
+                yaw_ctrl_active = false;
+                motor_active_brake();
+            }
+        }
+    } else {
+        loc_last_step_time = millis();
+    }
+}
+</code></pre>
+
+<p>
+Finally, <code>localization_service()</code> was implemented to perform the Lab 11 observation loop. 
+The robot turns to evenly spaced target angles, waits briefly for stabilization, and stores one ToF reading at each position. 
+This modification allows the Lab 9 scan framework to be reused as the sensing component for Bayes filter localization in Lab 11.
+</p>
+<h3 class="h4 mt-4">real-world results</h3>
+
+<h3 class="h4 mt-4">Result at marked pose (0 ft, 3 ft, 0 deg)</h3>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/2.png" alt="localization result at marked pose (0 ft, 3 ft, 0 deg)" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 2. Belief-based localization result at the marked pose (0 ft, 3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/3.png" alt="console output of Bayes filter update at marked pose (0 ft, 3 ft, 0 deg)" style="max-width: 820px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 3. Console output of the observation data and Bayes filter update for the marked pose (0 ft, 3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<p>
+Figure 2 shows the localization result for the marked pose at (0 ft, 3 ft, 0 deg). The estimated belief is concentrated near the true position, and the plotted belief marker is very close to the ground-truth marker, indicating that the update step worked effectively at this test point. As shown in Figure 3, the observation loop successfully collected a full set of range measurements, and the Bayes filter produced the most likely pose at approximately (0.000, 0.914, 10.000). Since 0.914 m is close to 3 ft, the estimated position is consistent with the ground truth, with only a small heading error remaining in the final result.
+</p>
+
+<h3 class="h4 mt-4">Result at marked pose (5 ft, 3 ft, 0 deg)</h3>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/4.png" alt="localization result at marked pose (5 ft, 3 ft, 0 deg)" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 4. Belief-based localization result at the marked pose (5 ft, 3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/5.png" alt="console output of Bayes filter update at marked pose (5 ft, 3 ft, 0 deg)" style="max-width: 820px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 5. Console output of the observation data and Bayes filter update for the marked pose (5 ft, 3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<p>
+Figure 4 shows the localization result for the marked pose at (5 ft, 3 ft, 0 deg). In this trial, the Bayes filter converged to a different region of the map than the nominal test location, so the position estimate was less accurate than in some of the other trials. As shown in Figure 5, the most likely pose was approximately (-1.524, 0.610, 10.000). Although this result does not match the intended marked pose, it still demonstrates that the filter was able to form a confident belief based on the collected observations, while also showing that some locations were more challenging for real-world localization than others.
+</p>
+
+<h3 class="h4 mt-4">Result at marked pose (5 ft, -3 ft, 0 deg)</h3>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/6.png" alt="localization result at marked pose (5 ft, -3 ft, 0 deg)" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 6. Belief-based localization result at the marked pose (5 ft, -3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/7.png" alt="console output of Bayes filter update at marked pose (5 ft, -3 ft, 0 deg)" style="max-width: 820px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 7. Console output of the observation data and Bayes filter update for the marked pose (5 ft, -3 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<p>
+Figure 6 shows the localization result for the marked pose at (5 ft, -3 ft, 0 deg). In this trial, the estimated belief is close to the expected position in the lower-right region of the map, indicating that the update step was able to identify the correct location reasonably well. As shown in Figure 7, the Bayes filter returned the most likely pose as approximately (1.524, -0.914, -70.000). Since 1.524 m and -0.914 m correspond closely to 5 ft and -3 ft, respectively, the position estimate is accurate, while the heading still shows a moderate error compared with the nominal 0 deg orientation.
+</p>
+
+<h3 class="h4 mt-4">Result at marked pose (-3 ft, -2 ft, 0 deg)</h3>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/8.png" alt="localization result at marked pose (-3 ft, -2 ft, 0 deg)" style="max-width: 520px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 8. Belief-based localization result at the marked pose (-3 ft, -2 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-3 text-center">
+  <img class="img-fluid rounded border d-block mx-auto" src="figures/9.png" alt="console output of Bayes filter update at marked pose (-3 ft, -2 ft, 0 deg)" style="max-width: 820px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 9. Console output of the observation data and Bayes filter update at the marked pose (-3 ft, -2 ft, 0 deg).
+  </figcaption>
+</figure>
+
+<p>
+Figure 8 shows the localization result for the marked pose at (-3 ft, -2 ft, 0 deg). In this trial, the estimated belief is concentrated in the lower-left region of the map, which is consistent with the general ground-truth area. As shown in Figure 9, the Bayes filter returned the most likely pose as approximately (-0.914, -0.914, -50.000). Although the estimate does not exactly match the nominal marked pose, it still identifies a reasonable nearby location, showing that the update step can provide useful localization information on the real robot under noisy conditions.
+</p>
+
+<figure class="mt-2 mb-3 text-center">
+  <video class="img-fluid rounded border d-block mx-auto" controls style="max-width: 300px;">
+    <source src="figures/1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 1. Real-robot observation loop during data collection at a marked test pose.
+  </figcaption>
+</figure>
+
+<p>
+Video 1 shows the real robot performing the in-place scanning motion used to collect ToF observations for the Bayes filter update. Although (0,0) point is not needed, here just shows as an example.
+</p>
+
+<h3 class="h4 mt-4">Discussion</h3>
+<p>
+Overall, the experiment showed that Bayes filter localization can be successfully applied to the real robot. The results were generally consistent with the map, and several marked poses were localized accurately or within the correct nearby region. Compared with simulation, the real-world tests showed greater sensitivity to sensor noise, ToF measurement quality, and communication timing, which affected the consistency of some results. Even so, the experiment demonstrates that the overall localization framework is effective on physical hardware and that the real robot can still produce meaningful belief updates from a full 360-degree scan.
+</p>
+
+
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>

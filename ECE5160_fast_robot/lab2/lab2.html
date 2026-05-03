@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab2: IMU</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab2: IMU</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+      <h2 class="mb-3">Lab 2</h2>
+
+      <h3 class="h5">Goals</h3>
+      <p>
+        The goal of this lab is to add the IMU to the robot and start running the Artemis+sensors from a battery, recording a stunt on the RC robot.
+      </p>
+
+      <h3 class="h5 mt-4">Prelab</h3>
+      <ol>
+      <li class="mt-3">
+      The pre-lab phase mainly involves reading and understanding the basic principles and output meanings of the ICM-20948 IMU, including accelerometer, gyroscope and magnetometer. I also thoroughly reading the experiment instructions to understand the overall process of subsequent data acquisition, attitude estimation, and transmission.
+      </li>
+      </ol>
+      <h2>Lab Tasks</h2>
+      <hr/>
+
+      <h3>Prep the RC car</h3>
+      <ol>
+      <li>Start charging the battery for the RC car using the USB charger.</li>
+      </ol>
+
+      <h3>Setup the IMU</h3>
+      <ol>
+
+      <li>Install the SparkFun ICM-20948 Arduino library from Library Manager.</li>
+          <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.png"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1 SparkFun ICM-20948 Arduino library installed.
+      </figcaption>
+    </figure>
+
+      <li>Connect the IMU to the Artemis board using QWIIC connectors.</li>
+      <li>Run "Example1_Basics" and verify readings change when rotate/flip the board.</li>
+            <p>
+  The example file defines <code>#define AD0_VAL 1</code>, indicating that the AD0/SDO pin is high. <code>AD0_VAL</code> is used to select the I2C address bit of the ICM-20948.
+</p>
+
+<p>
+  From the serial output, it can be observed that when the accelerometer <em>Acc (mg)</em> is stationary, one axis is close to &plusmn;1000&nbsp;mg (≈1g), and the other two axes are close to 0. When the board is flipped or its orientation is changed, the axis close to &plusmn;1000&nbsp;mg will switch between x/y/z, and may change from positive to negative. Rapid movement or a tap will cause a brief deviation due to superimposed linear acceleration.
+</p>
+<p>
+  When the gyroscope <em>Gyr (dps)</em> is stationary, each axis is close to 0&nbsp;dps. When rotating around a certain axis, the corresponding axis will show a significant positive/negative angular velocity; the faster the rotation, the larger the magnitude, and it returns to near 0 after stopping.
+</p>
+
+         <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/4.png"
+           style="max-width: 800px;">
+    </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/2.png"
+           style="max-width: 800px;">
+    </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/3.png"
+           alt="SparkFun ICM-20948 Arduino library installed"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 2  change in sensor values when act on the board
+      </figcaption>
+    </figure>
+
+      <li>Blink LED when the board is running.</li>
+
+    </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/5.jpg"
+           alt="LED blink when board is running"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 3  LED blink when board is running
+      </figcaption>
+    </figure>
+
+      <pre class="bg-light border rounded p-3"><code>void blink3()
+{
+  for (int i = 0; i < 3; i++)
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(500);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(500);
+  }
+}
+void setup()
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // Step4: blink 3 times slowly on start-up
+  blink3();
+}
+</code></pre>
+      </ol>
+
+<section id="lab2">
+
+  <!-- ================= Accelerometer ================= -->
+  <section id="accelerometer">
+    <h3>Accelerometer</h3>
+    <ol>
+      <li>
+        <p>
+          Use the equations from class to convert accelerometer data into pitch and roll.
+        </p>
+        <ul>
+          <li>Show the output at { -90, 0, 90 } degrees pitch and roll.</li>
+          <li>
+            Write a Jupyter function to plot data vs time (ms/us) for future labs.
+          </li>
+          <li>
+            Discuss accelerometer accuracy and (optional) two-point calibration.
+          </li>
+        </ul>
+
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/6.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 4  Pitch Angle vs. Time
+      </figcaption>
+    </figure>
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/7.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 5  Roll Angle vs. Time
+      </figcaption>
+    </figure>
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/8.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 6  Axis Accelerometer (mg) vs. Time
+      </figcaption>
+    </figure>
+
+<p>
+Using the standard accelerometer-based attitude equations mentioned in the class with radians-to-degrees conversion, pitch and roll were computed from the 3-axis acceleration data in Jupyter. The time traces show clear plateaus near 0° (board flat) and near ±90° (board on an edge), with brief spikes during handling due to transient linear acceleration.
+</p>
+
+<p>
+Accelerometer accuracy was evaluated using six static poses (±X, ±Y, ±Z). The mean readings for the gravity-aligned axis were:
+X+: +995.35 mg, X−: −1000.20 mg, Y+: +991.32 mg, Y−: −1004.00 mg, Z+: +1000.71 mg, Z−: −1018.04 mg.
+These results confirm the sensor is close to the expected ±1 g level, with the largest endpoint deviation observed on Z− (≈ −1018 mg).
+</p>
+
+<p>
+A per-axis two-point calibration (linear scale + offset) was then applied using the measured +1 g and −1 g endpoints. The fitted parameters were:
+X: k=1.0022, b=−2.42 mg; Y: k=1.0023, b=−6.34 mg; Z: k=0.9907, b=−8.66 mg.
+After calibration, the gravity-magnitude mean moved closer to the ideal 1000 mg (from 1013.94 mg to 1011.76 mg), while the overall standard deviation changed only slightly (70.58 mg to 70.22 mg), indicating calibration mainly corrects static bias/scale error and the remaining variation is dominated by motion/transition segments.
+</p>
+
+<h4 class="h6 mt-3">Code Snippet</h4>
+<p class="mt-2">
+<p>
+  <a href="https://gist.github.com/Alanq0327/03c2b112abe42fa9a10e2060f54d7596"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+      <li>
+        <p>
+          When the accelerometer is noisy, especially near the RC car. Record data and analyze the
+          frequency spectrum.
+        </p>
+    </figure>
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/9.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 7 Accelerometer Time-Domain Data
+      </figcaption>
+    </figure>
+    </figure>
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/10.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 8 Sample Preview and Logging Summary (N=3897)
+    <!-- Data Cleaning (core) -->
+<style>
+  /* Force code blocks to be left-aligned even if the page has centered text */
+  pre.code-block {
+    text-align: left !important;
+    margin: 0 0 1rem 0;
+  }
+  pre.code-block code {
+    display: block;
+    text-align: left !important;
+    white-space: pre;      /* keep formatting */
+    tab-size: 4;
+  }
+</style>
+
+<!-- Data Cleaning (core) -->
+<pre class="bg-light border rounded p-3 code-block"><code># Data cleaning: keep only valid 6-col CSV rows, coerce to numeric, build t_s
+import pandas as pd
+
+CSV_PATH = "data2.csv"
+cols = ["t_ms","ax_mg","ay_mg","az_mg","pitch_deg","roll_deg"]
+
+rows = []
+with open(CSV_PATH, "r", encoding="utf-8", errors="ignore") as f:
+    for line in f:
+        s = line.strip()
+        if not s:
+            continue
+        parts = s.split(",")
+        if len(parts) != 6:
+            continue
+        if parts[0].strip() == "t_ms":              # skip header
+            continue
+        if parts[0].startswith("Initialization"):   # skip init line
+            continue
+        rows.append(parts)
+
+df = pd.DataFrame(rows, columns=cols).apply(pd.to_numeric, errors="coerce")
+df = df.dropna().reset_index(drop=True)
+df["t_s"] = (df["t_ms"] - df["t_ms"].iloc[0]) / 1000.0
+</code></pre>
+
+<!-- Plotting (core) -->
+<pre class="bg-light border rounded p-3 code-block"><code># Plot: accel axes vs time
+import matplotlib.pyplot as plt
+
+x  = df["t_s"].to_numpy(float)
+ax = df["ax_mg"].to_numpy(float)
+ay = df["ay_mg"].to_numpy(float)
+az = df["az_mg"].to_numpy(float)
+
+fig, a = plt.subplots()
+a.plot(x, ax, label="ax_mg")
+a.plot(x, ay, label="ay_mg")
+a.plot(x, az, label="az_mg")
+a.set_xlabel("Time (s)")
+a.set_ylabel("Accel (mg)")
+a.set_title(f"All samples (N={len(df)})")
+a.grid(True)
+a.legend(loc="best")
+plt.show()
+</code></pre>
+
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/b796520cd386f2851c05f5e02cd9798a"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+      </figcaption>
+    </figure>
+    </figure>
+        </figure>
+             <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/11.png"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 9 Accelerometer Noise Spectrum (FFT)
+      </figcaption>
+    </figure>
+<!-- Code Snippet (Core FFT) -->
+<pre class="bg-light border rounded p-3 text-start"><code class="language-python"># --- Core: estimate sampling rate + compute/plot FFT amplitude spectra (ax/ay/az) ---
+t = df["t_ms"].to_numpy(dtype=float) * 1e-3
+t -= t[0]
+fs = 1.0 / np.median(np.diff(t))
+
+def amp_spectrum(x, fs):
+    x = x - np.mean(x)
+    n = len(x)
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(n, d=1/fs)
+    A = (2.0 / n) * np.abs(X)
+    A[0] *= 0.5
+    return f, A
+
+plt.figure(figsize=(10,5))
+for k in ["ax_mg","ay_mg","az_mg"]:
+    f, A = amp_spectrum(df[k].to_numpy(dtype=float), fs)
+    m = (f >= 0.5) & (f <= min(200, fs/2))
+    plt.plot(f[m], A[m], label=k)
+
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Amplitude (mg)")
+plt.title("Accelerometer Noise Spectrum (FFT)")
+plt.grid(True)
+plt.legend(loc="best")
+plt.show()</code></pre>
+
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/eb2ad8f8c50162f996fba802b3689469"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+ 
+<!-- ===================== Accelerometer Noise / FFT Section ===================== -->
+      <li>
+        <p>
+Include a graph of the Fourier Transform of accelerometer data and discuss a reasonable cutoff frequency for filtering.
+
+
+        </p>
+      </li>
+<!-- Fig. 12 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/12.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 10 Peak frequencies extracted from FFT (top peaks per axis)
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  An FFT was computed for each accelerometer axis using a sampling rate estimated from the median time step
+  (N = 3897, duration = 136.35 s, median dt = 35.000 ms, fs ≈ 28.57 Hz). The dominant peaks were mainly below
+  ~14 Hz: ax peaks at 1.83 Hz (0.802 mg) and 10.03 Hz (0.778 mg); ay peaks at 6.97 Hz (0.770 mg) and 13.01 Hz
+  (0.736 mg); az peaks at 5.89 Hz (1.414 mg) and 12.19 Hz (1.379 mg).
+</p>
+
+<!-- Fig. 13 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/13.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 11 Time-domain accelerometer data (all samples)
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  The time-domain plot shows mostly steady acceleration with intermittent spikes caused by handling/vibration.
+  These transients are consistent with the broad-band components seen in the spectrum and motivate filtering
+  to stabilize downstream angle estimation.
+</p>
+
+<!-- Fig. 14 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/14.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 12 FFT comparison for ax (no-car vs. car)
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  To evaluate the effect of the RC car, the recording was split into two halves: no-car (1st half) and car nearby
+  (2nd half). In the 1–12 Hz band, ax RMS increased from 0.3686 mg (no-car) to 0.5070 mg (car), i.e., a 1.38× increase.
+</p>
+
+<!-- Fig. 15 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/15.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 13 FFT comparison for ay (no-car vs. car)
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  The same split-half analysis on ay shows an RMS increase (1–12 Hz) from 0.3609 mg (no-car) to 0.5382 mg (car),
+  corresponding to a 1.49× rise in low-frequency vibration energy.
+</p>
+
+<!-- Fig. 16 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/16.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 14 FFT comparison for az (no-car vs. car)
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  The az axis is the most affected by the RC car: band-limited RMS (1–12 Hz) increases from 0.3748 mg (no-car) to
+  1.0325 mg (car), a 2.75× increase, indicating strong coupling of vibration into the z-axis.
+</p>
+
+<!-- Fig. 17 -->
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/17.png"
+       style="max-width: 700px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 15 Cumulative spectral energy and cutoff selection
+  </figcaption>
+</figure>
+
+<p class="mt-2 mb-4">
+  A cutoff frequency was selected using cumulative spectral energy: the 95% energy points are
+  13.47 Hz (ax), 13.37 Hz (ay), and 13.63 Hz (az). Therefore, a low-pass cutoff of 13 Hz was chosen to retain
+  nearly all motion-related content while attenuating higher-frequency noise. Lower cutoffs would further smooth
+  the signal but risk attenuating legitimate dynamics, whereas higher cutoffs would pass more vibration noise,
+  reducing angle stability.
+</p>
+<h4>Code Snippet (FFT Spectrum creating)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/2aac6b90c622260b70a1d3913bb2396f"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+<h4>Code Snippet (cutoff point selection)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/392d799a4acf1aae541681444645c1c4"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+      </li>
+
+
+
+      <li>
+        <p>
+          Implement a simple low-pass filter on accelerometer data and plot original vs filtered signals.
+        </p>
+<!-- Figures 16–18: Original vs Low-pass filtered accel (x/y/z) -->
+<section class="mt-4">
+
+  <figure class="mt-2 mb-3 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/18.png"
+         style="max-width: 500px;">
+    <figcaption class="text-muted small mt-1 text-center">
+      Figure 16 Original vs Low-pass Filtered Accelerometer (ax_mg)
+    </figcaption>
+  </figure>
+
+  <figure class="mt-2 mb-3 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/19.png"
+         style="max-width: 500px;">
+    <figcaption class="text-muted small mt-1 text-center">
+      Figure 17 Original vs Low-pass Filtered Accelerometer (ay_mg)
+    </figcaption>
+  </figure>
+
+  <figure class="mt-2 mb-3 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/20.png"
+         style="max-width: 500px;">
+    <figcaption class="text-muted small mt-1 text-center">
+      Figure 18 Original vs Low-pass Filtered Accelerometer (az_mg)
+    </figcaption>
+  </figure>
+
+  <p class="mb-0">
+    Across all three axes, the low-pass filter reduces high-frequency fluctuations while preserving the slower
+    baseline/step changes of the signal. The filtered traces are visibly smoother than the raw data, and large transient
+    spikes are attenuated but not fully removed (as expected for impulsive events). Overall, the result confirms that the
+    chosen cutoff primarily suppresses vibration/noise components while maintaining the underlying motion trend.
+  </p>
+
+<h4>Code Snippet </h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/3538aedadb18e1d8e9e8aa687b24ce82"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+</section>
+
+      </li>
+
+    </ol>
+  </section>
+
+<!-- ================= Gyroscope ================= -->
+<section id="gyroscope">
+  <h3>Gyroscope</h3>
+
+  <ol>
+    <li>
+      <p>
+        Gyroscope angular rates were integrated over time using the class equations to obtain
+        pitch, roll, and yaw. During data collection, the IMU was
+        rotated slowly through different angles (to create smooth attitude changes) and lightly tapped/knocked
+        (to introduce brief vibration/impulse disturbances).
+      </p>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/21.png"
+             style="max-width: 800px;">
+        <figcaption class="text-muted small mt-1 text-center">
+          Figure 19 Pitch comparison (accelerometer vs integrated gyro vs complementary filter)
+        </figcaption>
+      </figure>
+
+      <p class="mt-2">
+        In Figure 19, the accelerometer-based pitch is stable in quasi-static segments but exhibits spikes
+        during taps/motion. The gyro-integrated pitch responds smoothly to rotation but shows noticeable drift
+        over time. The complementary filter (alpha = 0.02) tracks the accelerometer baseline while suppressing
+        high-frequency accelerometer noise and limiting gyro drift, producing the most stable estimate.
+      </p>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/22.png"
+             style="max-width: 800px;">
+        <figcaption class="text-muted small mt-1 text-center">
+          Figure 20 Roll comparison (accelerometer vs integrated gyro vs complementary filter)
+        </figcaption>
+      </figure>
+
+      <p class="mt-2">
+        Figure 20 shows the same trend for roll: accelerometer roll contains occasional impulsive outliers, gyro roll
+        is smoother but slowly diverges, and the complementary filter yields a smoother trajectory that remains
+        close to the gravity-referenced roll during slow tilts while rejecting tap-induced noise.
+      </p>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/23.png"
+             style="max-width: 800px;">
+        <figcaption class="text-muted small mt-1 text-center">
+          Figure 21 Yaw from gyro integration (demonstrating drift)
+        </figcaption>
+      </figure>
+
+      <p class="mt-2">
+        As shown in Figure 21, yaw was computed by integrating the gyro z-rate; unlike pitch/roll, yaw does not have a
+        gravity-based accelerometer reference, so the integrated yaw accumulates bias and drifts over time, especially
+        after disturbances and sustained rotation.
+      </p>
+    </li>
+
+    <li>
+      <p>
+        A complementary filter was applied to <strong>pitch</strong> and <strong>roll</strong> to combine low-frequency,
+        drift-free information from the accelerometer with high-frequency responsiveness from the gyroscope. With
+        <strong>alpha = 0.02</strong>, the output stays stable during static periods, responds well to slow angle changes,
+        and is noticeably less sensitive to quick vibrations/taps than raw accelerometer angles while avoiding the long-term
+        drift of pure gyro integration.
+      </p>
+    </li>
+
+<h4>Code Snippet </h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/b0a29462a7b07575fa48625c188018bc"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+  </ol>
+</section>
+
+  <!-- ================= Sample Data ================= -->
+  <section id="sample-data">
+    <h3>Sample Data</h3>
+
+    <!-- Put figures first (as requested) -->
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/24.png"
+           style="max-width: 650px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 24 BLE capture workflow (CLEAR/START/STOP/SEND) and saved CSV output
+      </figcaption>
+    </figure>
+
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/25.png"
+           style="max-width: 650px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 25 Captured IMU samples and sampling statistics (N=1700, duration=5.00 s, fs≈339.8 Hz)
+      </figcaption>
+    </figure>
+
+    <!-- Keep the original framework content, and fill in the answers under each item -->
+    <ol>
+      <li>
+        <p>Speed up execution of the main loop</p>
+        <ul>
+          <li>
+            Implemented a non-blocking loop that checks dataReady() each iteration and only logs when new IMU data is available (no waiting).
+          </li>
+          <li>
+            Removed debugging delays during recording and minimized serial printing to avoid slowing the loop.
+          </li>
+          <li>
+            Sampling speed achieved (Figure 25): N=1700 samples in 5.00 s → fs≈339.8 Hz (median-based estimate).
+          </li>
+          <li>
+            The loop can iterate faster than the IMU update rate; extra iterations simply do not append samples unless the IMU indicates new data.
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <p>Collect and store time-stamped IMU data using start/stop flags</p>
+        <p>
+          Data logging was controlled via BLE commands: <code>CLEAR</code> resets buffers, <code>START</code> begins recording,
+          <code>STOP</code> ends recording, and <code>SEND</code> transmits the buffered samples to the computer and saves them as CSV
+          (Figure 24).
+        </p>
+      </li>
+
+      <li>
+        <p>Data storage design (arrays, data types, memory)</p>
+        <ul>
+          <li>
+            Stored each sample with a timestamp and both sensor axes (e.g., t_ms, ax_mg, ay_mg, az_mg, gx, gy, gz), keeping accel and gyro aligned by time.
+          </li>
+          <li>
+            Preferred numeric storage on-board (integers/fixed-point) for memory efficiency; timestamps as uint32_t.
+          </li>
+          <li>
+            Memory estimate: using uint32_t time (4B) + 6×int16_t axes (12B) ≈ 16 B/sample.
+            For 5 s at ~340 Hz: 1700 samples → ~27 KB, which is practical for the Artemis.
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <p>Demonstrate ≥ 5 s capture and BLE transfer</p>
+        <p>
+          The recorded run satisfies the requirement: duration=5.00 s and the check reports “≥5s: YES” (Figure 25).
+          The dataset was successfully sent over BLE and saved as imu_ble_dump.csv> (Figure 24).
+        </p>
+      </li>
+
+      <h4>Code Snippet </h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/bb79ee83b228009809d9360b655ae3e0"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+    </ol>
+  </section>
+<!-- ================= Record a stunt! ================= -->
+<section id="record-a-stunt">
+  <h3>Record a stunt!</h3>
+
+  <ol>
+    <li>
+      <p>
+        Mounted the RC car battery with correct polarity (red-to-red, black-to-black) and installed AA batteries in the remote controller.
+      </p>
+    </li>
+
+    <li>
+      <p>
+        Recorded a driving video and establish a baseline of the car dynamics (forward/backward speed, turning radius, acceleration/braking response).
+      </p>
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         style="max-width: 500px;"
+         controls
+         preload="metadata">
+    <source src="figures/1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 1 RC Car Baseline Driving (Manual Control)
+  </figcaption>
+</figure>
+
+
+    </li>
+  </ol>
+</section>
+
+</section>
+
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>
+
+  <!-- 2) Core Arduino Code -->
+  <h3 class="h5 mt-4">2. Arduino code</h3>
+<p class="mt-2">
+  <a href="https://gist.github.com/Alanq0327/560089cffcd69383700ef24e1b0c6ac5"
+     target="_blank" rel="noopener">
+    Arduino code (GitHub Gist)
+  </a>
+</p>
+</section>
