@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab1: The Artemis board and Bluetooth</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab1: The Artemis board and Bluetooth</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+      <h2 class="mb-3">Lab 1A</h2>
+
+      <h3 class="h5">Goals</h3>
+      <p>
+        The goal of Lab 1A is to complete board bring-up and establish a reliable Arduino-based workflow for the redboard Artemis Nano.
+        In this lab, I verified code upload, onboard LED functionality, USB serial communication, and basic access to onboard sensors,
+        such as temperature sensor and PDM microphone.
+      </p>
+
+      <h3 class="h5 mt-4">Prelab</h3>
+      <ol>
+        <li>Installed/updated Arduino IDE and SparkFun Apollo3 board support; configured board and serial port.</li>
+        <li>Verified the programming pipeline by flashing a minimal LED/serial test sketch; confirmed stable serial output.</li>
+        <li>Reviewed documentation and noted the 3.3V-only I/O requirement for safe interfacing.</li>
+      </ol>
+
+<h3 class="h5 mt-4">Lab Tasks</h3>
+<ul>
+  <li class="mt-2">
+    Installed/updated the Arduino IDE and the SparkFun Apollo3 (Artemis) board package. Selected SparkFun RedBoard Artemis Nano
+    and the correct serial port.
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.1.png"
+           alt="Boards Manager showing SparkFun Apollo3 Boards installed"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1.1. SparkFun Apollo3 Boards package installed.
+      </figcaption>
+    </figure>
+  </li>
+
+  <li class="mt-3">
+    I run the Blink file(File->Examples->01.Basics) to validate power, programming, and runtime execution. As a result, the onboard LED toggles at the expected rate.
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.2.jpg"
+           alt="RedBoard Artemis Nano running Blink with onboard LED toggling"
+           style="max-width: 500px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1.2. The onboard LED toggles at the expected rate.
+      </figcaption>
+    </figure>
+  </li>
+
+  <li class="mt-3">
+    I run the Example4_Serial file in File->Examples->Apollo3, which added serial initialization and periodic prints and monitored output using Serial Monitor/terminal.
+    As a result, stable serial output is received without disconnects or corrupted text.
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.3.png"
+           alt="Serial Monitor showing stable periodic prints"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1.3. Stable Serial Monitor output.
+      </figcaption>
+    </figure>
+  </li>
+
+  <li class="mt-3">
+    I run the Example2_analogRead file in File->Examples->Apollo3, which read the onboard temperature sensor using the provided API/example and printed values at a fixed interval.
+    As a result, the readings fall within a reasonable range and update over time.
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.4.png"
+           alt="Onboard temperature sensor serial output"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1.4. Temperature sensor readings.
+      </figcaption>
+    </figure>
+  </li>
+
+  <li class="mt-3">
+    I run the Example1_MicrophoneOutput in File->Examples->PDM, which configured the PDM microphone and streamed either raw samples or a simple metric (peak/RMS) to the serial output.
+    The reported signal changes noticeably between quiet conditions and speech/taps, indicating the microphone pipeline is working.
+    <figure class="mt-2 mb-0 text-center">
+      <img class="img-fluid rounded border d-block mx-auto"
+           src="figures/1.5.png"
+           alt="PDM microphone serial output"
+           style="max-width: 800px;">
+      <figcaption class="text-muted small mt-1 text-center">
+        Figure 1.5. PDM microphone output.
+      </figcaption>
+    </figure>
+  </li>
+</ul>
+<h3 class="h5 mt-4">Additional tasks for 5000-level students</h3>
+
+<p style="text-align: justify;">
+  In this additional 5000-level task, I implemented a simplified electronic tuner on the RedBoard Artemis Nano
+  by combining audio input and serial output.
+</p>
+<p style="text-align: justify;">
+  The program samples the input signal on A0 at 8 kHz and stores 2048 points in a buffer, then uses the Goertzel
+  algorithm to estimate the signal energy at three predefined target frequencies: 440 Hz (A4), 523 Hz (C5), and 659 Hz (E5).
+</p>
+<p style="text-align: justify;">
+  For each sampling window, it selects the note with the largest magnitude and prints the corresponding note name to the
+  Serial Monitor when the strongest frequency stands out above the others by a fixed threshold, which helps suppress
+  noise-triggered detections.
+</p>
+
+
+
+<figure class="mt-3 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/1.6.png"
+       alt="Tuner detected A4"
+       style="max-width: 900px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 1.6. Note detected (A4).
+  </figcaption>
+</figure>
+
+<figure class="mt-3 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/1.7.png"
+       alt="Tuner detected E5"
+       style="max-width: 900px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 1.7. Note detected (E5).
+  </figcaption>
+</figure>
+<h4 class="h6 mt-3">Code Snippet (core logic only)</h4>
+<pre class="bg-light border rounded p-3"><code>#include &lt;PDM.h&gt;
+#include &lt;math.h&gt;
+
+#define N   2048
+#define FS  16000
+
+const float F[]   = {440.0f, 523.0f, 659.0f};
+const char*  NM[] = {"A4", "C5", "E5"};
+const int K = 3;
+const float TH = 200.0f;
+
+volatile bool ready = false;
+volatile int  w = 0;
+int16_t buf[N], chunk[256];
+</code></pre>
+<h4>Code Snippet (Gist)</h4>
+<p>
+  <a href="https://gist.github.com/Alanq0327/6eafb96eb058a2ef437db5176db00c25"
+     target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+<section class="mt-5">
+  <h2 class="mb-3">Lab 1B</h2>
+
+  <h3 class="h5">Goals</h3>
+  <p style="text-align: justify;">
+    The objective of Lab 1B is to establish reliable Bluetooth Low Energy (BLE) communication between the computer and the Artemis board.
+    Using a Jupyter/Python interface as the BLE central, the computer sends commands to the Artemis and receives responses through BLE characteristics.
+    This lab also sets up a reusable framework for transmitting data from the Artemis back to the computer.
+  </p>
+
+  <h3 class="h5 mt-4">Prelab</h3>
+  <ol>
+    <li class="mt-2">
+      <b>BLE Background.</b>
+      <p class="mb-0" style="text-align: justify;">
+        I reviewed the basic BLE workflow used in this lab, focusing on the central–peripheral connection model and the use of GATT
+        services/characteristics for data exchange. This provides the foundation for sending commands from the computer to the Artemis board
+        and receiving responses via notifications.
+      </p>
+    </li>
+
+    <li class="mt-3">
+      <b>Computer Setup (Python + Virtual Environment).</b>
+      <p style="text-align: justify;">
+        I installed Python version 3.13 and set up an isolated virtual environment for the lab to avoid dependency conflicts.
+        After activating the environment, I installed the required packages and verified the environment for running the provided notebooks.
+      </p>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.1.png"
+             alt="Python environment setup and package installation"
+             style="max-width: 1000px;">
+        <figcaption class="text-muted small mt-1 text-center">
+          Figure 2.1. Python environment setup (packages installed).
+        </figcaption>
+      </figure>
+    </li>
+
+    <li class="mt-3">
+      <b>Lab Codebase Organization.</b>
+      <p class="mb-0" style="text-align: justify;">
+        Then I downloaded the provided Lab 1B codebase. The repository contains an Arduino
+        sketch (<code>ble_arduino</code>) for the Artemis and a Python package/notebook (<code>ble_python</code>) used to connect, send commands,
+        and log results from a Jupyter workflow.
+      </p>
+    </li>
+  </ol>
+</section>
+<section class="mt-5">
+  <h3 class="h5 mt-4">4. Jupyter Workflow</h3>
+
+  <p style="text-align: justify;">
+    I started JupyterLab from the project directory with the virtual environment activated, ensuring the notebook server can access
+    the lab files. The notebook is used as the primary interface to send BLE commands and observe responses.
+  </p>
+
+  <figure class="mt-2 mb-0 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/2.3.png"
+         alt="JupyterLab workflow"
+         style="max-width: 1000px;">
+    <figcaption class="text-muted small mt-1 text-center">Figure 2.2 JupyterLab setup.</figcaption>
+  </figure>
+
+  <figure class="mt-3 mb-0 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/2.4.png"
+         alt="Logging output"
+         style="max-width: 900px;">
+    <figcaption class="text-muted small mt-1 text-center">Figure 2.3 Python logging.</figcaption>
+  </figure>
+
+  <h3 class="h5 mt-4">Instructions</h3>
+  <p style="text-align: justify;">
+    To prepare for Lab 1B, I first updated the Artemis board identifier on the computer by replacing the
+    <code>artemis_address</code> field in <code>connections.yaml</code> with the MAC address printed by my Artemis
+    (ensuring it is a valid 12-digit hexadecimal MAC, zero-padded if needed).
+  </p>
+  <p style="text-align: justify;">
+    Next, I generated a new BLE service UUID (e.g., using <code>uuid4()</code>) to avoid accidentally connecting to a classmate’s board,
+    and I updated this UUID consistently in both <code>ble_arduino.ino</code> (<code>BLE_UUID_TEST_SERVICE</code>)
+    and <code>connections.yaml</code> (<code>ble_service</code>).
+  </p>
+  <p style="text-align: justify;">
+    I then verified that all UUID definitions used by the Arduino sketch match those expected by the Python configuration file,
+    and that the command IDs in the Arduino enum <code>CommandTypes</code> match the mapping in <code>cmd_types.py</code>.
+    After these configuration updates, I re-flashed <code>ble_arduino.ino</code> onto the Artemis and ran the provided demo notebook in JupyterLab.
+  The notebook successfully connected to my board and verified basic GATT reads (e.g., <code>RX_FLOAT</code> and <code>RX_STRING</code>),
+  confirming the BLE pipeline was functional before starting the lab tasks.
+  </p>
+
+  <figure class="mt-2 mb-0 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/2.5.png"
+         alt="BLE controller connection log"
+         style="max-width: 1000px;">
+    <figcaption class="text-muted small mt-1 text-center">Figure 2.4 BLE connection log.</figcaption>
+  </figure>
+
+  <figure class="mt-3 mb-0 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/2.6.png"
+         alt="Read float and string"
+         style="max-width: 900px;">
+    <figcaption class="text-muted small mt-1 text-center">Figure 2.5 Read float/string.</figcaption>
+  </figure>
+
+  <h3 class="h5 mt-4">5. Artemis Board Setup (BLE Sketch + MAC Address)</h3>
+  <p style="text-align: justify;">
+    On the Artemis side, I installed the ArduinoBLE library, compiled and flashed the provided BLE sketch (<code>ble_arduino.ino</code>),
+    and confirmed successful bring-up by printing the board’s BLE MAC address over serial (baud rate set to 115200).
+  </p>
+
+  <figure class="mt-2 mb-0 text-center">
+    <img class="img-fluid rounded border d-block mx-auto"
+         src="figures/2.2.png"
+         alt="MAC address printed over serial"
+         style="max-width: 950px;">
+    <figcaption class="text-muted small mt-1 text-center">Figure 2.6 BLE MAC address.</figcaption>
+  </figure>
+
+  <h3 class="h5 mt-4">Lab Tasks</h3>
+  <ol class="mt-2">
+
+    <li class="mt-2">
+      <b>ECHO command (string round-trip).</b>
+      <p class="mb-2" style="text-align: justify;">
+        I sent a string from the laptop to the Artemis using <code>ECHO</code>, and verified the laptop receives and prints an
+        augmented reply string from the Artemis.
+      </p>
+
+      <pre class="bg-light border rounded p-3"><code>ble.send_command(CMD.ECHO, "HiHello")
+s = ble.receive_string(ble.uuid['RX_STRING'])
+print(s)</code></pre>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.7.png"
+             alt="ECHO result"
+             style="max-width: 900px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.7. ECHO output.</figcaption>
+      </figure>
+    </li>
+
+    <li class="mt-4">
+      <b>SEND_THREE_FLOATS (parse values on Arduino).</b>
+      <p class="mb-2" style="text-align: justify;">
+        I transmitted three float values from Python to the Artemis using <code>SEND_THREE_FLOATS</code>, then extracted and confirmed
+        the three floats correctly in the Arduino sketch.
+      </p>
+      <pre class="bg-light border rounded p-3"><code>ble.send_command(CMD.SEND_THREE_FLOATS, "1.43|4.76|7.23")</code></pre>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.8.png"
+             alt="Three floats printed"
+             style="max-width: 900px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.8. Three floats received.</figcaption>
+      </figure>
+    </li>
+
+    <li class="mt-4">
+      <b>Implement GET_TIME_MILLIS (Arduino → laptop string).</b>
+      <p class="mb-2" style="text-align: justify;">
+        I added a new command <code>GET_TIME_MILLIS</code> so the Artemis replies with a formatted string <code>T:354391</code>
+        via the BLE string characteristic.
+      </p>
+
+      <pre class="bg-light border rounded p-3"><code>ble.send_command(CMD.GET_TIME_MILLIS, "")
+time.sleep(0.1)
+s = ble.receive_string(ble.uuid['RX_STRING'])
+print(s)</code></pre>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.9.png"
+             alt="GET_TIME_MILLIS output"
+             style="max-width: 900px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.9. GET_TIME_MILLIS.</figcaption>
+      </figure>
+    </li>
+
+    <li class="mt-4">
+      <b>Python notification handler (parse time).</b>
+<p style="text-align: justify;">
+  I registered a notification callback on the <code>RX_STRING</code> characteristic to handle incoming Artemis string notifications.
+  The callback decodes the message, filters for the T:354391 format, and extracts the integer timestamp.
+  To synchronize the asynchronous notification with the notebook cell, I used an <code>asyncio.Event</code> to block until the timestamp arrives (or times out),
+  then printed the latest parsed value to confirm correct parsing.
+</p>
+
+<h4 class="h6 mt-3">Code Snippet (core logic only)</h4>
+<pre class="bg-light border rounded p-3"><code class="language-python">import asyncio
+
+state = {"time_ms": None}
+ev = asyncio.Event()
+
+def rx_string_cb(sender, data):
+    msg = bytes(data).decode("utf-8", errors="ignore").strip("\x00").strip()
+    if msg.startswith("T:"):
+        state["time_ms"] = int(msg.split(":", 1)[1])
+        print("time_ms =", state["time_ms"])
+        ev.set()
+    else:
+        print("raw:", msg)
+
+uuid_rx = ble.uuid["RX_STRING"]
+uuid_tx_cmd = ble.uuid["TX_CMD_STRING"]
+
+try:
+    await ble.device.client.stop_notify(uuid_rx)
+except:
+    pass
+
+await ble.device.client.start_notify(uuid_rx, rx_string_cb)
+
+cmd_string = f"{CMD.GET_TIME_MILLIS.value}:"
+await ble.device.client.write_gatt_char(uuid_tx_cmd, cmd_string.encode("utf-8"), response=True)
+
+await asyncio.wait_for(ev.wait(), timeout=5.0)
+print("latest parsed =", state["time_ms"])</code></pre>
+
+<h4 class="h6 mt-3">Code Snippet (Gist)</h4>
+<p class="mt-2">
+  <a href="https://gist.github.com/Alanq0327/d278c220db0cda120589bfc9c207ebb5" target="_blank" rel="noopener">
+    Open on GitHub Gist
+  </a>
+</p>
+
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.10.png"
+             alt="Parsed time in Python"
+             style="max-width: 900px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.10. Parsed timestamp.</figcaption>
+      </figure>
+    </li>
+
+    <li class="mt-4">
+      <b>Measure message rate (stream time + compute throughput).</b>
+<p style="text-align: justify;">
+I started a timed streaming loop on the Artemis (via START_TIME_STREAM) which periodically sent timestamp notifications to the laptop. On the Python side, I registered a notification callback and counted the number of received timestamps over a measured duration, then computed the average message rate and effective throughput based on the timestamp payload size. In this run, the link achieved approximately 47.7 msg/s and an effective throughput of about 3.06 kbps.
+</p>
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.12.png"
+             alt="Buffered timestamp throughput"
+             style="max-width: 950px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.11 Buffered transfer stats.</figcaption>
+      </figure>
+    </li>
+
+
+    <li class="mt-4">
+      <b>Buffered timestamp array + SEND_TIME_DATA.</b>
+      <p class="mb-2" style="text-align: justify;">
+        Instead of sending each timestamp immediately, I stored timestamps in a global array on the Artemis and implemented
+        <code>SEND_TIME_DATA</code> to transmit the stored timestamps afterward, verifying all data arrives on the laptop.
+      </p>
+
+      <figure class="mt-2 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.13.png"
+             alt="Buffered timestamp throughput"
+             style="max-width: 950px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.12 Buffered transfer stats.</figcaption>
+      </figure>
+    </li>
+
+    <h4 class="h6 mt-3">Code Snippet(only demonstrate core code) </h4>
+<h4 class="h6 mt-3">Code Snippet (core logic only)</h4>
+<pre class="bg-light border rounded p-3"><code>import asyncio, time
+
+async def task6_collect(duration_s=5.0):
+    rx_uuid = ble.uuid["RX_STRING"]
+    tx_cmd_uuid = ble.uuid["TX_CMD_STRING"]
+
+    vals = []
+    expected = None
+
+    def cb(sender, raw):
+        nonlocal expected
+        msg = bytes(raw).decode("utf-8", errors="ignore").strip("\x00").strip()
+        if not msg:
+            return
+        if msg.startswith("N:"):
+            try:
+                expected = int(msg.split(":", 1)[1])
+            except:
+                pass
+            return
+        if msg.startswith("T:"):
+            try:
+                vals.append(int(msg.split(":", 1)[1]))
+            except:
+                pass
+
+    try:
+        await ble.device.client.stop_notify(rx_uuid)
+    except:
+        pass
+    await ble.device.client.start_notify(rx_uuid, cb)
+
+    await ble.device.client.write_gatt_char(tx_cmd_uuid, f"{CMD.START_TIME_STREAM.value}:".encode(), response=True)
+    await asyncio.sleep(duration_s)
+    await ble.device.client.write_gatt_char(tx_cmd_uuid, f"{CMD.STOP_TIME_STREAM.value}:".encode(), response=True)
+    await asyncio.sleep(0.1)
+
+    vals.clear()
+    expected = None
+    await ble.device.client.write_gatt_char(tx_cmd_uuid, f"{CMD.SEND_TIME_DATA.value}:".encode(), response=True)
+
+    t0 = time.time()
+    while time.time() - t0 < 30.0:
+        if expected is not None and len(vals) >= expected:
+            break
+        await asyncio.sleep(0.05)
+
+    await ble.device.client.stop_notify(rx_uuid)
+    return vals, expected
+
+vals, expected = await task6_collect(5.0)
+print("expected =", expected, "| received =", len(vals))</code></pre>
+
+<p class="mt-2">
+  <a href="https://gist.github.com/Alanq0327/4595200ed9a0511efe8aed486446bfce"
+     target="_blank" rel="noopener">
+    Open full code on GitHub Gist
+  </a>
+</p>
+
+
+    <li class="mt-4">
+      <b>Paired time + temperature arrays + GET_TEMP_READINGS.</b>
+      <p class="mb-2" style="text-align: justify;">
+        I recorded temperature readings alongside timestamps in a second array of equal length; implemented <code>GET_TEMP_READINGS</code>
+        to send paired (time, temperature) data; and parsed/stored them into two Python lists via the notification handler.
+      </p>
+
+
+      <figure class="mt-3 mb-0 text-center">
+        <img class="img-fluid rounded border d-block mx-auto"
+             src="figures/2.14.png"
+             alt="Notification and count"
+             style="max-width: 950px;">
+        <figcaption class="text-muted small mt-1 text-center">Figure 2.14. Paired data received.</figcaption>
+      </figure>
+    </li>
+<h4 class="h6 mt-3">Code Snippet(only demonstrate core code)</h4>
+<pre class="bg-light border rounded p-3"><code class="language-python">import asyncio, time, re
+
+TX_STRING_UUID = "f235a225-6735-4d73-94cb-ee5dfce9ba83".lower()
+
+def _find_uuid_by_value(target_uuid_lower: str):
+    for k, v in ble.uuid.items():
+        if str(v).lower() == target_uuid_lower:
+            return k, v
+    return None, None
+
+async def task7_core(duration_s=2.0, timeout_s=8.0):
+    _, notify_uuid = _find_uuid_by_value(TX_STRING_UUID)
+    tx_cmd_uuid = ble.uuid["TX_CMD_STRING"]
+
+    time_list, temp_list = [], []
+    expected = None
+
+    def cb(sender, raw):
+        nonlocal expected
+        msg = bytes(raw).decode("utf-8", errors="ignore").strip("\x00").strip()
+        if not msg:
+            return
+
+        if msg.startswith("N:"):
+            try:
+                expected = int(msg.split(":", 1)[1])
+            except:
+                pass
+            return
+
+        mt = re.search(r"T:(\d+)", msg)
+        mc = re.search(r"C:([-+]?\d+(?:\.\d+)?)", msg)
+        if mt and mc:
+            time_list.append(int(mt.group(1)))
+            temp_list.append(float(mc.group(1)))
+
+    await ble.device.client.start_notify(notify_uuid, cb)
+
+    await ble.device.client.write_gatt_char(
+        tx_cmd_uuid, f"{CMD.START_TIME_STREAM.value}:".encode(), response=False
+    )
+    await asyncio.sleep(duration_s)
+    await ble.device.client.write_gatt_char(
+        tx_cmd_uuid, f"{CMD.STOP_TIME_STREAM.value}:".encode(), response=False
+    )
+    await asyncio.sleep(0.1)
+
+    time_list.clear(); temp_list.clear(); expected = None
+    await ble.device.client.write_gatt_char(
+        tx_cmd_uuid, f"{CMD.GET_TEMP_READINGS.value}:".encode(), response=False
+    )
+
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        if expected is not None and len(time_list) >= expected:
+            break
+        await asyncio.sleep(0.02)
+
+    await ble.device.client.stop_notify(notify_uuid)
+    return time_list, temp_list</code></pre>
+
+<p class="mt-2">
+  <a href="https://gist.github.com/Alanq0327/46133edec1f60e074c15056888c73a32"
+     target="_blank" rel="noopener">
+    Open full code on GitHub Gist
+  </a>
+</p>
+
+
+    <li class="mt-4">
+      <b>Differences between the two methods.</b>
+      <p style="text-align: justify;">
+        The two approaches differ in where the bottleneck occurs. In Method 1 (streaming each sample immediately over BLE), the Artemis sends
+        each timestamp/reading as soon as it is generated, enabling near real-time monitoring and simple implementation. However, the effective
+        rate is limited by BLE throughput, notification overhead, and Python-side handling, so messages can be delayed or dropped when the send
+        rate is too high.
+      </p>
+      <p style="text-align: justify;">
+        In Method 2 (buffer locally, then transmit later), the Artemis records data into arrays in RAM and only sends the stored data on demand.
+        This decouples sampling from BLE communication, allowing the board to record faster and more consistently, which limited mainly by the sensor
+        read time and the loop period, but it is not real-time and is constrained by available RAM; data can also be lost if the board resets
+        before uploading.
+      </p>
+      <p style="text-align: justify;">
+        In practice, Method 2 can avoid BLE transactions during acquisition. The storage capacity is bounded by RAM: the Artemis has 384 kB
+        (≈ 393,216 bytes) of RAM, but not all of it is available for user buffers. If timestamps are stored as <code>uint32_t</code> (4 bytes)
+        and temperatures are stored as float(4 bytes), each paired sample is 8 bytes, so a practical upper bound is on the order
+        of ~30k–35k (time, temp) samples without risking memory pressure (similar reasoning applies if only timestamps are stored).
+      </p>
+    </li>
+
+    <section id="additional-5000" class="mt-5">
+  <h2 class="h4">Additional Tasks (5000-level)</h2>
+  <p class="text-justify">
+    In this section, I evaluated the BLE communication performance between the laptop (BLE central) and the Artemis board (BLE peripheral).
+    The experiments focus on (1) effective data rate and protocol overhead under different reply payload sizes, and (2) reliability when increasing the
+    Artemis-to-laptop streaming rate.
+  </p>
+
+  <!-- ===================== 1) Effective Data Rate and Overhead ===================== -->
+  <h3 class="h5 mt-4">1) Effective Data Rate and Overhead</h3>
+  <p class="text-justify">
+    I measured the end-to-end round-trip time (RTT) for a request–reply exchange while varying the reply payload length (e.g., 5 bytes and 120 bytes).
+    Using the measured RTT, I computed the effective data rate as <em>payload_size / RTT</em>. This quantifies how much useful throughput is achieved
+    after accounting for BLE/GATT overhead, and helps answer whether many short packets incur disproportionately high overhead compared to fewer larger replies.
+  </p>
+
+  <h4 class="h6 mt-3">Method</h4>
+  <ul class="text-justify">
+    <li>For each reply length, run multiple trials to obtain a stable mean RTT (and optionally standard deviation).</li>
+    <li>Compute effective data rate using the reply payload length divided by mean RTT.</li>
+    <li>Summarize results with at least one plot (effective rate vs reply size; optionally RTT vs reply size).</li>
+  </ul>
+
+  <h4 class="h6 mt-3">Code Snippet</h4>
+  <pre class="bg-light border rounded p-3"><code class="language-python">Ls = [5, 20, 60, 120]
+
+all_rtts = {}
+for L in Ls:
+    rtts = await measure_rtt_for_len(ble, L=L, trials=80, timeout_s=2.0)
+    all_rtts[L] = rtts
+    print(f"L={L:>3} bytes | mean RTT={np.mean(rtts)*1000:.2f} ms | std={np.std(rtts)*1000:.2f} ms")</code></pre>
+
+  <!-- Figure placeholder: code output / RTT printouts -->
+  <figure class="my-3 text-center">
+    <!-- Replace with your image path -->
+    <img  src="figures/2.15.png" class="img-fluid border rounded" alt="RTT printout by reply size">
+    <figcaption class="mt-2"> Figure 2.15 RTT statistics printed for each reply payload size.</figcaption>
+  </figure>
+
+    <pre class="bg-light border rounded p-3"><code class="language-python">def eff_rate_kbps(L, rtts):
+    m = float(np.mean(rtts))
+    return (8.0 * L / m) / 1000.0  # kbps
+
+rates = [eff_rate_kbps(L, all_rtts[L]) for L in Ls]
+mean_rtt_ms = [float(np.mean(all_rtts[L]) * 1000.0) for L in Ls]
+
+print("\nEffective data rates:")
+for L, r in zip(Ls, rates):
+    print(f"  L={L:>3} bytes -> {r:.2f} kbps")
+
+# Plot 1: reply size vs effective data rate
+plt.figure()
+plt.plot(Ls, rates, marker='o')
+plt.xlabel("Reply size (bytes)")
+plt.ylabel("Effective data rate (kbps)")
+plt.title("BLE Effective Data Rate vs Reply Size")
+plt.grid(True)
+plt.show()
+
+# Plot 2: reply size vs RTT
+plt.figure()
+plt.plot(Ls, mean_rtt_ms, marker='o')
+
+plt.xlabel("Reply size (bytes)")
+plt.ylabel("Mean RTT (ms)")
+plt.title("BLE RTT vs Reply Size")
+plt.grid(True)
+plt.show()
+</code></pre>
+  <!-- Figure placeholder: plots -->
+  <figure class="my-3 text-center">
+    <!-- Replace with your image path -->
+    <img  src="figures/2.16.png" class="img-fluid border rounded" alt="RTT printout by reply size">
+    <figcaption class="mt-2"> Figure 2.16 RTT statistics printed for each reply payload size.</figcaption>
+  </figure>
+  <figure class="my-3 text-center">
+    <!-- Replace with your image path -->
+    <img  src="figures/2.17.png" class="img-fluid border rounded" alt="RTT printout by reply size">
+    <figcaption class="mt-2"> Figure 2.17 Effective data rate increases with reply size as fixed overhead is amortized.</figcaption>
+  </figure>
+  <h4 class="h6 mt-3">Observation</h4>
+  <p class="text-justify">
+    Overall, larger replies improve the <em>useful</em> throughput because a greater fraction of the transmission is payload rather than fixed protocol overhead.
+    In contrast, very short replies suffer from overhead dominance: even if RTT is similar, the delivered payload per exchange is small, resulting in a lower effective data rate.
+  </p>
+
+  <!-- ===================== 2) Reliability at Higher Streaming Rates ===================== -->
+  <h3 class="h5 mt-5">2) Reliability at Higher Streaming Rates</h3>
+  <p class="text-justify">
+    Next, I tested reliability by increasing the Artemis-to-laptop publish rate and checking whether the laptop receives all transmitted messages without loss.
+    I used a notification callback to count received packets and compared the received count against the expected count (and/or sequence continuity when available).
+    This reveals the onset of packet drops, delayed notifications, or instability as the streaming period becomes smaller (i.e., faster).
+  </p>
+
+  <h4 class="h6 mt-3">Code Snippet</h4>
+  <pre class="bg-light border rounded p-3"><code class="language-python">periods_us = [20000, 10000, 5000, 2000, 1000, 500]  # 50Hz -> 2000Hz
+results = []
+
+for p in periods_us:
+    res = await reliability_test_harduuid(ble, period_us=p, duration_s=5.0)
+    results.append(res)
+    print(res)
+
+xs = [r["period_us"] for r in results if r["lost_rate"] is not None]
+ys = [100.0 * r["lost_rate"] for r in results if r["lost_rate"] is not None]
+
+plt.figure()
+plt.plot(xs, ys, marker='o')
+plt.gca().invert_xaxis()
+plt.xlabel("Period (us)  (smaller = faster)")
+plt.ylabel("Loss rate (%)")
+plt.title("Reliability: Loss rate vs Send period")
+plt.grid(True)
+plt.show()</code></pre>
+
+
+  <!-- Figure placeholder: reliability plot -->
+  <figure class="my-3 text-center">
+    <!-- Replace with your image path -->
+    <img src="figures/2.18.png" class="img-fluid border rounded" alt="Loss rate vs send period plot">
+    <figcaption class="mt-2">Figure 2.18 Reliability test results: loss rate versus send period.</figcaption>
+  </figure>
+
+  <p class="text-justify">
+    As the send period decreases, the system may eventually become limited by BLE notification throughput and host-side processing/scheduling.
+    When the rate exceeds what the link can sustain, symptoms typically include missing packets, delayed arrivals, or increasing jitter.
+    In the stable region, expected and received counts match closely, indicating reliable delivery at that operating point.
+  </p>
+</section>
+
+  </ol>
+</section>
+<h3>Discussion</h3>
+<p>
+  In this lab, I learned how to structure a BLE central–peripheral workflow using GATT services/characteristics,
+  and how to build a reusable command/response interface for data logging (string/float reads and notifications).
+  A key takeaway is that BLE throughput is strongly affected by protocol/processing overhead: larger payloads
+  achieve higher effective data rates because fixed per-message overhead is amortized, while very small packets
+  are inefficient.
+</p>
+<p>
+  The main challenges were keeping UUID/command mappings consistent across Arduino and Python and ensuring
+  notifications were parsed reliably. I addressed this by adding a lightweight Python notification handler
+  that parses formatted messages and uses an <code>asyncio</code> event to synchronize
+  request–reply timing and buffered transfers. This made it easier to verify “expected vs. received” counts and
+  diagnose issues such as mismatched command IDs or missing notifications.
+</p>
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>
+
+  <!-- 2) Core Arduino Code -->
+  <h3 class="h5 mt-4">2. Core Arduino code</h3>
+<p class="mt-2">
+  <a href="https://gist.github.com/Alanq0327/046ac50297228d0e614c70fdae58dfdc"
+     target="_blank" rel="noopener">
+    Arduino code (GitHub Gist)
+  </a>
+</p>
+
+
+</section>
+<!-- ===================== End Appendix ===================== -->
+
+
+
