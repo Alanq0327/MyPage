@@ -1,1 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xingzhi Qian | Personal Homepage</title>
+  <meta name="description" content="Personal academic homepage of Xingzhi Qian: research interests, publications, projects, experience, awards, and skills." />
+
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #1f2937;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --green: #059669;
+      --orange: #ea580c;
+      --purple: #7c3aed;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+      --radius: 18px;
+      --max: 1080px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(37, 99, 235, 0.08), transparent 28%),
+        radial-gradient(circle at 92% 12%, rgba(124, 58, 237, 0.07), transparent 28%),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.62;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    .wrap {
+      width: min(92%, var(--max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.20);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 650;
+    }
+
+    .nav-links a:hover {
+      color: var(--blue);
+    }
+
+    .hero {
+      padding: 52px 0 30px;
+    }
+
+    .hero-card {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 28px;
+      align-items: center;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: var(--shadow);
+    }
+
+    .profile-photo {
+      width: 160px;
+      height: 160px;
+      border-radius: 28px;
+      object-fit: cover;
+      border: 5px solid white;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 11px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: #1d4ed8;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 4.3rem);
+      line-height: 1.02;
+      letter-spacing: -0.06em;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 780px;
+      font-size: 1.04rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 800;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: #bfdbfe;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.11);
+    }
+
+    .btn.primary {
+      color: white;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+    }
+
+    section {
+      padding: 30px 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-link {
+      color: var(--blue);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.90);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .info-card {
+      padding: 20px;
+    }
+
+    .info-card h3 {
+      font-size: 1.02rem;
+      margin-bottom: 5px;
+      letter-spacing: -0.02em;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.93rem;
+      margin-top: 8px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 15px;
+      background: var(--blue-light);
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--blue);
+      font-size: 1.35rem;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .pub-list,
+    .link-list,
+    .award-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pub-item,
+    .link-item,
+    .award-item {
+      padding: 18px 20px;
+      border-left: 4px solid var(--blue);
+    }
+
+    .pub-item:nth-child(2) { border-left-color: var(--green); }
+    .link-item:nth-child(2) { border-left-color: var(--green); }
+    .link-item:nth-child(3) { border-left-color: var(--orange); }
+    .link-item:nth-child(4) { border-left-color: var(--purple); }
+
+    .pub-item h3,
+    .link-item h3 {
+      font-size: 1rem;
+      margin-bottom: 5px;
+      letter-spacing: -0.02em;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      color: #475569;
+      font-size: 0.78rem;
+      font-weight: 760;
+    }
+
+    .card-link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mini-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: #1d4ed8;
+      font-size: 0.84rem;
+      font-weight: 850;
+    }
+
+    .research-card {
+      padding: 19px;
+      min-height: 150px;
+    }
+
+    .research-card h3 {
+      font-size: 1.02rem;
+      margin-bottom: 7px;
+      letter-spacing: -0.02em;
+    }
+
+    .skill-block {
+      padding: 20px;
+    }
+
+    .skill-block h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 750;
+    }
+
+    .vision {
+      padding: 22px 24px;
+      border-left: 4px solid var(--blue);
+      color: #475569;
+    }
+
+    footer {
+      margin-top: 34px;
+      padding: 28px 0 40px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      .hero-card,
+      .grid-2,
+      .grid-3,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .hero-card {
+        text-align: center;
+      }
+      .profile-photo {
+        margin: 0 auto;
+      }
+      .actions {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero-card {
+        padding: 22px;
+      }
+      .section-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <nav class="wrap nav">
+      <a class="brand" href="#home">
+        <span class="brand-dot">XQ</span>
+        <span>Xingzhi Qian</span>
+      </a>
+      <div class="nav-links">
+        <a href="#academic">Academic</a>
+        <a href="#publications">Publications</a>
+        <a href="#research">Research</a>
+        <a href="#projects">Projects</a>
+        <a href="#experience">Experience</a>
+        <a href="#skills">Skills</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="home">
+    <section class="hero">
+      <div class="wrap hero-card">
+        <!-- Your uploaded photo is currently assets/photo.jpg -->
+        <img class="profile-photo" src="assets/photo.jpg" alt="Profile photo of Xingzhi Qian" />
+
+        <div>
+          <span class="eyebrow">Cornell ECE M.Eng. · AI / Data / Embedded Systems</span>
+          <h1>Xingzhi Qian</h1>
+          <p class="subtitle">
+            I am an engineering student interested in building practical intelligent systems that connect data, algorithms,
+            embedded hardware, and real-world applications. My work spans machine learning, signal processing, robotics,
+            computational modeling, and engineering implementation.
+          </p>
+
+          <div class="actions">
+            <a class="btn primary" href="assets/Xingzhi%20Qian.pdf" target="_blank">Download CV</a>
+            <a class="btn" href="mailto:alanq0327@163.com">Email</a>
+            <a class="btn" href="https://github.com/Alanq0327" target="_blank">GitHub</a>
+            <a class="btn" href="#projects">Projects</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="academic">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🎓 Academic Information</h2>
+        </div>
+
+        <div class="grid-2">
+          <article class="info-card card">
+            <h3>Cornell University</h3>
+            <div class="meta">M.Eng. in Electrical and Computer Engineering · Aug. 2025 – Dec. 2026</div>
+            <p class="small">Focus: data science, machine learning, signal processing, embedded systems, robotics, and optimization.</p>
+          </article>
+
+          <article class="info-card card">
+            <h3>Shanghai Normal University</h3>
+            <div class="meta">B.Eng. in Electronic Information Engineering · Sept. 2021 – Jun. 2025</div>
+            <p class="small">Joint Program with University of Dayton · GPA: 3.81 / 4.0 · Class Rank: 2 / 83 · College Rank: 2 / 512.</p>
+          </article>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><strong>2</strong><span>Publications / Papers</span></div>
+          <div class="stat"><strong>6+</strong><span>Selected Projects</span></div>
+          <div class="stat"><strong>2</strong><span>Internships</span></div>
+          <div class="stat"><strong>4</strong><span>Languages</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="publications">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>📚 Publications</h2>
+          <a class="section-link" href="publications.html">View full list →</a>
+        </div>
+
+        <div class="pub-list">
+          <article class="pub-item card">
+            <h3>Optimizing Path Planning and Conflict Resolution in High-Density AS/RS with a Multi-Shuttle Cooperative Scheduling Framework</h3>
+            <p class="small">Hu, Yu, An, Kang, Liu, Xiangpeng, Ji, Yixuan, Qian, Xingzhi, et al. IEEE Transactions on Instrumentation & Measurement, Submitted.</p>
+            <div class="card-link-row">
+              <a class="mini-link" href="publications/asrs-multi-shuttle.html">Details</a>
+            </div>
+          </article>
+
+          <article class="pub-item card">
+            <h3>Endoscopic-based 3D Reconstruction Methods of Human Internal Cavity</h3>
+            <p class="small">Z.-H. Cheng, Z.-Y. Lin, and X.-Z. Qian. Proceedings of 2023 International Conference on Computer Science and Mechatronics, vol. 3017, no. 1, 2023.</p>
+            <div class="card-link-row">
+              <a class="mini-link" href="publications/endoscopic-3d-reconstruction.html">Details</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="research">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🔬 Research Interests</h2>
+        </div>
+
+        <div class="grid-3">
+          <article class="research-card card">
+            <h3>Signal Processing & Machine Learning</h3>
+            <p class="small">Data-driven estimation, denoising, feature extraction, score-based methods, and learning-enhanced signal analysis.</p>
+          </article>
+
+          <article class="research-card card">
+            <h3>Robotics & Embedded AI</h3>
+            <p class="small">Sensor integration, state estimation, low-latency control, embedded systems, IoT, and autonomous robot behavior.</p>
+          </article>
+
+          <article class="research-card card">
+            <h3>Computational Modeling & Decision Systems</h3>
+            <p class="small">Stochastic modeling, simulation, reinforcement learning, optimization, and engineering decision support systems.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🚀 Projects</h2>
+          <a class="section-link" href="projects/index.html">All project pages →</a>
+        </div>
+
+        <div class="link-list">
+          <article class="link-item card">
+            <h3>Raspberry Pi Based Smart Classroom Assistant</h3>
+            <p class="small">Distributed embedded control system with Raspberry Pi, ESP8266, MQTT, touchscreen interaction, speech recognition, sensors, and actuators.</p>
+            <div class="tag-row">
+              <span class="tag">Raspberry Pi</span><span class="tag">ESP8266</span><span class="tag">MQTT</span><span class="tag">Embedded Systems</span>
+            </div>
+            <div class="card-link-row">
+              <a class="mini-link" href="projects/smart-classroom.html">Description</a>
+              <a class="mini-link" href="Smart%20Classroom%20Assistant/">Local Folder</a>
+              <a class="mini-link" href="https://github.com/haowang854/Classroom-Assistant" target="_blank">Source</a>
+            </div>
+          </article>
+
+          <article class="link-item card">
+            <h3>Option Pricing and Hedging with Calibrated SDE Models</h3>
+            <p class="small">Neural Heston SDE modeling, Monte Carlo pricing, parameter calibration, robust pricing bounds, and neural-network-based hedging.</p>
+            <div class="tag-row">
+              <span class="tag">Neural SDE</span><span class="tag">SPY Options</span><span class="tag">Monte Carlo</span><span class="tag">PyTorch</span>
+            </div>
+            <div class="card-link-row">
+              <a class="mini-link" href="projects/nsde-option-pricing.html">Description</a>
+              <a class="mini-link" href="NSDE-Option-Pricing/">Local Folder</a>
+            </div>
+          </article>
+
+          <article class="link-item card">
+            <h3>Cooperative Multi-Agent Learning in Overcooked-AI</h3>
+            <p class="small">Cooperative Markov game, reward shaping, policy behavior analysis, training curves, and multi-agent coordination in shared environments.</p>
+            <div class="tag-row">
+              <span class="tag">Multi-Agent RL</span><span class="tag">Overcooked-AI</span><span class="tag">Reward Design</span><span class="tag">Python</span>
+            </div>
+            <div class="card-link-row">
+              <a class="mini-link" href="projects/overcooked-ai.html">Description</a>
+              <a class="mini-link" href="Overcooked-AI/">Local Folder</a>
+            </div>
+          </article>
+
+          <article class="link-item card">
+            <h3>Cornell Fast Robots Course Design</h3>
+            <p class="small">Dynamic autonomous robot design with Artemis Nano, IMU, ToF sensing, BLE logging, filtering, state estimation, and reactive control.</p>
+            <div class="tag-row">
+              <span class="tag">Robotics</span><span class="tag">BLE</span><span class="tag">KF / PID</span><span class="tag">Embedded Control</span>
+            </div>
+            <div class="card-link-row">
+              <a class="mini-link" href="projects/fast-robots.html">Description</a>
+              <a class="mini-link" href="ECE5160_fast_robot/">Local Folder</a>
+            </div>
+          </article>
+
+          <article class="link-item card">
+            <h3>Undergraduate Project Archive</h3>
+            <p class="small">For earlier undergraduate projects without complete technical files. Use this page to write compact descriptions, outcomes, and skills used.</p>
+            <div class="tag-row">
+              <span class="tag">Face Recognition</span><span class="tag">YOLOv5 / YOLOv8</span><span class="tag">OpenMV Robot</span><span class="tag">AS/RS Scheduling</span>
+            </div>
+            <div class="card-link-row">
+              <a class="mini-link" href="projects/undergraduate-projects.html">Descriptions</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="experience">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>💼 Work, Internship & TA Experience</h2>
+          <a class="section-link" href="experience/index.html">All experience pages →</a>
+        </div>
+
+        <div class="grid-3">
+          <article class="info-card card">
+            <h3>Teaching Assistant</h3>
+            <div class="meta">Cornell University · ECE/ENGRD 2720 Data Science for Engineers</div>
+            <p class="small">Supported Python projects, algorithm explanation, debugging, and data science implementation.</p>
+            <div class="card-link-row"><a class="mini-link" href="experience/ta-data-science.html">Details</a></div>
+          </article>
+
+          <article class="info-card card">
+            <h3>Hardware Test Intern</h3>
+            <div class="meta">Shanghai Longcheer Technology Co., Ltd. · Aug. 2024 – Dec. 2024</div>
+            <p class="small">Fast-charging product testing, signal performance verification, reports, risk tracking, and issue resolution.</p>
+            <div class="card-link-row"><a class="mini-link" href="experience/longcheer-hardware-test.html">Details</a></div>
+          </article>
+
+          <article class="info-card card">
+            <h3>Hardware Design Intern</h3>
+            <div class="meta">Hangzhou Bailong Electronics Co., Ltd. · Jul. 2023 – Aug. 2023</div>
+            <p class="small">LabVIEW analysis, hardware solution design, schematic / PCB support, chip testing, and test-case design.</p>
+            <div class="card-link-row"><a class="mini-link" href="experience/bailong-hardware-design.html">Details</a></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="awards">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🏆 Competitions & Honors</h2>
+          <a class="section-link" href="awards.html">Details →</a>
+        </div>
+
+        <div class="award-list">
+          <div class="award-item card"><strong>Second Prize</strong> · National Undergraduate Mechanical Innovation Competition · May 2023</div>
+          <div class="award-item card"><strong>First Prize</strong> · “Zhengda Cup” National College Student Market Research and Analysis Competition · Apr. 2023</div>
+          <div class="award-item card"><strong>Second Prize</strong> · Contemporary Undergraduate Mathematical Contest in Modeling · Nov. 2022</div>
+          <div class="award-item card"><strong>First-class Academic Scholarship</strong> · Shanghai Normal University · 2021 / 2022 / 2023</div>
+          <div class="award-item card"><strong>Shanghai Outstanding Graduate</strong> · Jun. 2025</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="skills">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🧰 Skills & Languages</h2>
+        </div>
+
+        <div class="grid-2">
+          <article class="skill-block card">
+            <h3>Programming</h3>
+            <div class="chips">
+              <span class="chip">Python</span><span class="chip">C</span><span class="chip">C++</span><span class="chip">MATLAB</span><span class="chip">Visual Basic</span><span class="chip">Verilog</span><span class="chip">JavaScript</span>
+            </div>
+          </article>
+
+          <article class="skill-block card">
+            <h3>Machine Learning & Data</h3>
+            <div class="chips">
+              <span class="chip">PyTorch</span><span class="chip">TensorFlow</span><span class="chip">Scikit-learn</span><span class="chip">CNN</span><span class="chip">YOLO</span><span class="chip">XGBoost</span><span class="chip">LightGBM</span><span class="chip">LSTM</span><span class="chip">PCA</span><span class="chip">KNN</span>
+            </div>
+          </article>
+
+          <article class="skill-block card">
+            <h3>Engineering Tools</h3>
+            <div class="chips">
+              <span class="chip">Altium Designer</span><span class="chip">Multisim</span><span class="chip">Proteus</span><span class="chip">Keil</span><span class="chip">Vivado</span><span class="chip">Arduino</span><span class="chip">LabVIEW</span><span class="chip">SolidWorks</span><span class="chip">AutoCAD</span><span class="chip">Git</span><span class="chip">SPSS</span>
+            </div>
+          </article>
+
+          <article class="skill-block card">
+            <h3>Languages</h3>
+            <div class="chips">
+              <span class="chip">Mandarin</span><span class="chip">English · IELTS 7.0</span><span class="chip">Japanese · JLPT N1</span><span class="chip">Cantonese · Business Level</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="vision">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>🌱 Long-term Goal</h2>
+        </div>
+        <div class="vision card">
+          My long-term goal is to become an engineer who can bridge advanced algorithms and practical systems. I hope to apply AI,
+          signal processing, data science, and embedded technologies to build reliable intelligent systems for real-world engineering,
+          industrial, and social applications.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>© 2026 Xingzhi Qian</span>
+      <span>Last updated: May 2026 · Built with HTML/CSS and GitHub Pages</span>
+    </div>
+  </footer>
+</body>
+</html>
 
