@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Undergraduate Projects | Xingzhi Qian</title>
+
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --green: #059669;
+      --orange: #ea580c;
+      --purple: #7c3aed;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+      --radius: 18px;
+      --max: 1080px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(37, 99, 235, 0.08), transparent 28%),
+        radial-gradient(circle at 92% 12%, rgba(124, 58, 237, 0.07), transparent 28%),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.62;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .wrap {
+      width: min(92%, var(--max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.20);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 650;
+    }
+
+    .nav-links a:hover {
+      color: var(--blue);
+    }
+
+    .hero {
+      padding: 46px 0 26px;
+    }
+
+    .hero-card {
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 6px 11px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: #1d4ed8;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      line-height: 1.02;
+      letter-spacing: -0.055em;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 880px;
+      font-size: 1.03rem;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      color: white;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+    }
+
+    section {
+      padding: 26px 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .section-title h2 {
+      font-size: 1.45rem;
+      letter-spacing: -0.03em;
+    }
+
+    .project-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .project-card {
+      padding: 22px 24px;
+      background: rgba(255, 255, 255, 0.90);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+    }
+
+    .project-card:nth-child(2) {
+      border-left-color: var(--green);
+    }
+
+    .project-card:nth-child(3) {
+      border-left-color: var(--orange);
+    }
+
+    .project-card:nth-child(4) {
+      border-left-color: var(--purple);
+    }
+
+    .project-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .project-head h3 {
+      font-size: 1.18rem;
+      letter-spacing: -0.025em;
+    }
+
+    .time {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.94rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #475569;
+      margin-bottom: 12px;
+    }
+
+    .duty-list {
+      padding-left: 19px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.58;
+    }
+
+    .duty-list li {
+      margin-bottom: 7px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      color: #475569;
+      font-size: 0.78rem;
+      font-weight: 760;
+    }
+
+    .link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .mini-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: var(--blue-light);
+      color: #1d4ed8;
+      font-size: 0.84rem;
+      font-weight: 850;
+    }
+
+    footer {
+      margin-top: 30px;
+      padding: 28px 0 40px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+      .nav-links {
+        display: none;
+      }
+
+      .project-head {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .time {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <nav class="wrap nav">
+      <a class="brand" href="../index.html">
+        <span class="brand-dot">XQ</span>
+        <span>Xingzhi Qian</span>
+      </a>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="../index.html#projects">Projects</a>
+        <a href="../index.html#publications">Publications</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-card">
+        <span class="eyebrow">Undergraduate Project Archive</span>
+        <h1>Undergraduate Projects</h1>
+        <p class="subtitle">
+          This page summarizes selected undergraduate research and engineering projects. Some earlier technical files were not fully archived,
+          so this page focuses on project motivation, technical responsibilities, methods, and outcomes.
+        </p>
+
+        <div class="btn-row">
+          <a class="btn primary" href="../index.html">Back to Homepage</a>
+          <a class="btn" href="../assets/Xingzhi%20Qian.pdf" target="_blank">Download CV</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-title">
+          <h2>Selected Undergraduate Projects</h2>
+        </div>
+
+        <div class="project-list">
+          <article class="project-card">
+            <div class="project-head">
+              <h3>Face Recognition and Automatic Sign-In System for Complex Classroom Scenes</h3>
+              <div class="time">Nov. 2023 – Nov. 2024</div>
+            </div>
+
+            <div class="meta">Research Member · Advisor: Prof. Kang An</div>
+
+            <p class="description">
+              Collaboratively built a system that integrates trained deep learning models, including YOLOv8 and FaceNet,
+              for face recognition and person counting in challenging classroom scenes. The system included a variable-zoom
+              pan-tilt camera, an automatic sign-in program, and a management app.
+            </p>
+
+            <ul class="duty-list">
+              <li>Improved the network structures of YOLOv8 and FaceNet by sharing convolutional layers, adding attention mechanisms, and using feature fusion to support simultaneous face recognition and people counting.</li>
+              <li>Collected classroom images under occlusion, side-angle faces, low resolution, uneven lighting, and misaligned illumination conditions.</li>
+              <li>Addressed facial recognition challenges by making the algorithm more sensitive to pixel-value edges and texture information.</li>
+              <li>Programmed the automatic sign-in program connected to a live camera and a Bluetooth-linked management app.</li>
+              <li>Designed the mechanical structure of the variable-focus pan-tilt unit to reduce blind spots in different classroom layouts.</li>
+            </ul>
+
+            <div class="tag-row">
+              <span class="tag">YOLOv8</span>
+              <span class="tag">FaceNet</span>
+              <span class="tag">Face Recognition</span>
+              <span class="tag">Person Counting</span>
+              <span class="tag">Bluetooth App</span>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-head">
+              <h3>YOLOv5 Algorithm-Based Traffic Light Recognition Guide Cane with Voice Reminder</h3>
+              <div class="time">Jun. 2023 – Aug. 2024</div>
+            </div>
+
+            <div class="meta">
+              Lead Researcher · Funded Project of Shanghai College Students Innovation & Entrepreneurial Training Program ·
+              Advisors: Prof. Bo Zhang and Prof. Xiao Lin
+            </div>
+
+            <p class="description">
+              Led the development of a guide-cane prototype that uses YOLOv5-based traffic-light recognition and a voice
+              reminder module to provide real-time assistance in outdoor scenarios.
+            </p>
+
+            <ul class="duty-list">
+              <li>Trained a YOLOv5 model on traffic-light images collected under various real-world conditions.</li>
+              <li>Tuned model parameters and refined training strategies to improve recognition stability and reliability.</li>
+              <li>Performed extensive field tests and continuously improved the model based on real-world performance.</li>
+              <li>Used Google APIs and gTTS to implement a voice interaction module for real-time spoken feedback.</li>
+              <li>Created mechanical drawings for the cane and integrated the machine vision and voice modules into the physical prototype.</li>
+            </ul>
+
+            <div class="tag-row">
+              <span class="tag">YOLOv5</span>
+              <span class="tag">Computer Vision</span>
+              <span class="tag">gTTS</span>
+              <span class="tag">Assistive Device</span>
+              <span class="tag">Prototype Design</span>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-head">
+              <h3>Optimizing Path Planning and Conflict Resolution in High-Density AS/RS with a Multi-Shuttle Cooperative Scheduling Framework</h3>
+              <div class="time">Jul. 2023 – May 2024</div>
+            </div>
+
+            <div class="meta">Research Member · Principal Investigator: Prof. Kang An</div>
+
+            <p class="description">
+              Contributed to a project that proposed a grid-map-based Multi-Shuttle Cooperative Scheduling Model
+              to address individual shuttle path planning and multi-shuttle collision avoidance in high-density
+              automated storage and retrieval systems.
+            </p>
+
+            <ul class="duty-list">
+              <li>Assisted in developing a Fuzzy A* path-planning algorithm that considers turning cost and obstacle distribution to balance efficiency and path length.</li>
+              <li>Helped design a grid-map-based adaptive time-window algorithm to improve shuttle and track utilization.</li>
+              <li>Supported validation experiments in both real and simulated warehouse environments.</li>
+              <li>Contributed to the research work that was later published in IEEE Transactions on Instrumentation and Measurement.</li>
+            </ul>
+
+            <div class="tag-row">
+              <span class="tag">Path Planning</span>
+              <span class="tag">Fuzzy A*</span>
+              <span class="tag">Collision Avoidance</span>
+              <span class="tag">Cooperative Scheduling</span>
+              <span class="tag">AS/RS</span>
+            </div>
+
+            <div class="link-row">
+              <a class="mini-link" href="https://ieeexplore.ieee.org/document/11045781" target="_blank">IEEE Paper</a>
+            </div>
+          </article>
+
+          <article class="project-card">
+            <div class="project-head">
+              <h3>An OpenMV-Based Autonomous Navigation and Pesticide Fixed-Point Spray Robot</h3>
+              <div class="time">Nov. 2022 – Nov. 2023</div>
+            </div>
+
+            <div class="meta">Lead Researcher · Advisor: Prof. Ye Yang</div>
+
+            <p class="description">
+              Led a team to develop a robot capable of autonomous navigation, movement control, visual recognition of plant damage,
+              and fixed-point pesticide spraying with controlled spray volume and timing.
+            </p>
+
+            <ul class="duty-list">
+              <li>Designed and assembled the overall robot, including its mechanical structure, modules, and working mechanisms.</li>
+              <li>Coordinated team members to complete mechanical-structure sketches and subsystem designs.</li>
+              <li>Programmed, adjusted, and implemented the robot’s autonomous navigation, movement, and target-recognition modules.</li>
+              <li>Participated in testing, debugging, and adjusting code for other robot modules.</li>
+              <li>Researched and selected appropriate accessories for the robot prototype.</li>
+            </ul>
+
+            <p class="description">
+              <strong>Achievement:</strong> The prototype won Second Prize in the 2023 National Undergraduate Mechanical Innovation Competition
+              and led to a utility model patent.
+            </p>
+
+            <div class="tag-row">
+              <span class="tag">OpenMV</span>
+              <span class="tag">STM32</span>
+              <span class="tag">SLAM</span>
+              <span class="tag">Autonomous Robot</span>
+              <span class="tag">Mechanical Design</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      © 2026 Xingzhi Qian · Undergraduate Project Archive
+    </div>
+  </footer>
+</body>
+</html>
