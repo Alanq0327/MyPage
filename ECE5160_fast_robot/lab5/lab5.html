@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab 5: Linear PID control and Linear interpolation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <main class="container py-4">
+    <header class="mb-4">
+      <h1 class="mb-1">Lab 5: Linear PID control and Linear interpolation</h1>
+      <div class="text-muted">Xingzhi Qian (xq87)</div>
+    </header>
+
+    <section>
+      <h2 class="mb-3">Lab 5</h2>
+
+      <h3 class="h5">Goals</h3>
+      <ol>
+        The goal of this lab is to design and implement an effective PID-based position controller for the robot, demonstrating both understanding of PID control and awareness of practical implementation constraints.
+
+      </ol>
+
+<h3 class="h5 mt-4">Prelab </h3>
+<ol>
+]
+    Before implementing closed-loop PID control, I first verified the BLE-based debugging pipeline. 
+    The goal of this prelab step was to confirm that the computer could send commands to the Artemis, 
+    the robot could execute a short behavior for a fixed amount of time, and debugging data could be 
+    successfully recorded and returned for later analysis.
+
+
+    To validate the sensing and logging path, I manually moved the robot while recording the ToF distance 
+    over time. Since the robot was moved by hand rather than autonomously controlled, the signal in 
+    <strong>Figure 1</strong> is not expected to be smooth. This figure simply demonstrates that ToF data 
+    could be sampled, logged, and visualized correctly through the BLE workflow.
+
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/1.png"
+       alt="Figure 1: ToF distance logged during BLE prelab validation"
+       style="max-width: 500px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 1 ToF distance logged during manual movement for BLE/debugging validation.
+  </figcaption>
+</figure>
+
+<ol start="3">
+  
+    I also verified that motor command data could be recorded correctly. During the same prelab process, 
+    PWM control values were logged and visualized, as shown in <strong>Figure 2</strong>. The purpose of 
+    this plot was not to evaluate control quality, but to confirm that motor input data could also be 
+    transmitted, stored, and analyzed correctly.
+
+
+ 
+    Together, these two plots confirm that the full debugging chain was working properly before the main 
+    PID experiments: BLE command transmission, onboard execution, sensor/motor logging, and post-run data 
+    visualization.
+
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <img class="img-fluid rounded border d-block mx-auto"
+       src="figures/2.png"
+       alt="PWM output logged during BLE prelab validation"
+       style="max-width: 500px;">
+  <figcaption class="text-muted small mt-1 text-center">
+    Figure 2: PWM command logged during manual movement for BLE/debugging validation.
+  </figcaption>
+</figure>
+
+
+
+
+      <h2>Lab Tasks</h2>
+      <hr/>
+<h3 class="h5 mt-4">Lab Task 1: ToF Sampling and Control Loop Design</h3>
+<ol>
+
+    The ToF sensor and the controller were decoupled in software. Instead of forcing the
+    controller to wait for a new ToF reading every iteration, the robot continuously updated
+    the latest valid ToF measurement in the background and let the controller run at a fixed
+    interval.
+
+    In the final implementation, the control loop was executed every 40 ms, corresponding to
+    a control frequency of about 25 Hz. This fixed-period design made the robot behavior more
+    stable than directly tying each control update to a new sensor frame.
+
+    Only valid ToF frames were used to update the stored distance value. If a frame was invalid,
+    it was ignored rather than immediately clearing the reading. The controller then checked
+    whether the most recent valid measurement was still fresh enough to use. If no fresh valid
+    ToF reading was available, the motors were stopped to avoid acting on stale sensor data.
+  
+    This design directly addressed the mismatch between sensor timing and control timing.
+    The ToF sensor could update asynchronously, while the controller maintained a regular
+    execution period for closed-loop control.
+
+</ol>
+
+<h3 class="h5 mt-4">ToF Update Code</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+static void update_current_tof_reading()
+{
+  if (!tof.checkForDataReady()) return;
+
+  uint16_t mm = tof.getDistance();
+  uint8_t status = tof.getRangeStatus();
+  tof.clearInterrupt();
+
+  current_tof_status = status;
+
+  if (status == 0 && mm >= 40 && mm <= 4000)
+  {
+    current_tof_reading = mm;
+    current_tof_time_ms = millis();
+    tof_has_valid = true;
+  }
+}
+
+static bool tof_recent_valid_available()
+{
+  if (!tof_has_valid) return false;
+  return (millis() - current_tof_time_ms) <= TOF_FRESH_TIMEOUT_MS;
+}
+</code></pre>
+
+<h3 class="h5 mt-4">Fixed-Period Control Loop Code</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+const unsigned long PID_CTRL_PERIOD_MS = 40;
+
+if ((now_ms - pid_last_ctrl_ms) >= PID_CTRL_PERIOD_MS)
+{
+  pid_last_ctrl_ms = now_ms;
+  pid_pos_control();
+}
+</code></pre>
+
+<h3 class="h5 mt-4">Controller Use of the Latest Valid ToF</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+if (!tof_recent_valid_available())
+{
+  motor_active_brake();
+  return;
+}
+
+current_error = (float)current_tof_reading - (float)pid_pos_target;
+</code></pre>
+<p style="text-align: justify;">
+  The control loop was executed every 40 ms, corresponding to about 25 Hz. In contrast, the ToF sensor updated asynchronously at a lower and non-uniform rate, so sensing and control were decoupled in software.
+</p>
+<p style="text-align: justify;">
+  This decoupling was necessary because directly waiting for every new ToF frame would make the control loop irregular and less stable.
+</p>
+
+  <h3 class="h5 mt-4">Lab Task 2: Controller Development (P → PD → PID)</h3>
+<ol>
+
+    The controller was developed incrementally. I first tuned the proportional gain using
+    three candidate values, <code>P = 0.3</code>, <code>0.5</code>, and <code>1.0</code>.
+    Among these values, <code>P = 0.5</code> provided the best balance between responsiveness
+    and stability, so it was selected as the baseline gain.
+
+    After that, derivative control was added to reduce overshoot and improve braking behavior.
+    With <code>P = 0.5</code> fixed, I compared three derivative gains:
+    <code>D = 1.2</code>, <code>1.5</code>, and <code>2.0</code>. These tests are shown in
+    <strong>Video 1</strong>, <strong>Video 2</strong>, and <strong>Video 3</strong>.
+
+    In <strong>Video 1</strong> (<code>P = 0.5, D = 1.2</code>), the robot reached the target
+    region but showed noticeable backward correction. In <strong>Video 2</strong>
+    (<code>P = 0.5, D = 1.5</code>), the stopping behavior was the most stable, with the
+    smallest visible oscillation. In <strong>Video 3</strong> (<code>P = 0.5, D = 2.0</code>),
+    the derivative action became too strong, leading to separated forward/backward adjustments.
+    Based on these comparisons, <code>D = 1.5</code> was selected as the best derivative gain.
+
+    After selecting the best PD gains, an integral term was introduced to form a full PID
+    controller. Three integral gains were tested: <code>I = 0.01</code>, <code>0.02</code>,
+    and <code>0.03</code>. Among them, <code>I = 0.02</code> produced the best overall result.
+    The final selected controller was therefore <code>P = 0.5</code>, <code>I = 0.02</code>,
+    and <code>D = 1.5</code>, shown in <strong>Video 4</strong>.
+
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         controls
+         style="max-width: 500px;">
+    <source src="figures/1.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 1 PD control with P = 0.5 and D = 1.2. Noticeable backward correction appears after the robot reaches the target region.
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         controls
+         style="max-width: 500px;">
+    <source src="figures/2.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 2 PD control with P = 0.5 and D = 1.5. This setting gave the best PD stopping behavior with reduced oscillation.
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         controls
+         style="max-width: 500px;">
+    <source src="figures/3.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 3 PD control with P = 0.5 and D = 2.0. Strong derivative action causes separated forward/backward adjustments.
+  </figcaption>
+</figure>
+
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         controls
+         style="max-width: 500px;">
+    <source src="figures/4.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 4 Final PID controller with P = 0.5, I = 0.02, and D = 1.5. This produced the most complete and stable stopping response.
+  </figcaption>
+</figure>
+
+<h3 class="h5 mt-4">Controller Gain Definition</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+float Kp_pos = 0.50f;
+float Ki_pos = 0.02f;
+float Kd_pos = 1.50f;
+</code></pre>
+
+<h3 class="h5 mt-4">Core PID Control Terms</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+P_term = Kp_pos * current_error;
+I_term = Ki_pos * error_integral;
+D_term = Kd_pos * dist_rate_filt;
+
+control_u = P_term + I_term + D_term;
+</code></pre>
+
+<h3 class="h5 mt-4">Motor Command Output</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+if (control_u > 0)
+{
+  pwm_cmd = pwm;
+  motor_forward_pwm(pwm);
+}
+else
+{
+  pwm_cmd = -pwm;
+  motor_backward_pwm(pwm);
+}
+</code></pre>
+<h3 class="h5 mt-4">Lab Task 3: Anti-Windup</h3>
+<ol>
+
+    To satisfy the 5000-level requirement, I further evaluated integrator wind-up using the
+    final PID controller. The selected baseline gains were <code>P = 0.5</code>,
+    <code>I = 0.02</code>, and <code>D = 1.5</code>.
+
+    With anti-windup enabled, the robot could approach the target and stop in a controlled
+    manner, as shown previously in <strong>Video 4</strong>. I then disabled anti-windup
+    while keeping the same PID gains and repeated the experiment.
+
+    Without anti-windup, the integral term continued to accumulate during large-error motion
+    and actuator saturation. As a result, the robot exhibited excessive overshoot and
+    eventually crashed into the wall, as shown in <strong>Video 5</strong>. This behavior
+    clearly demonstrates the importance of integrator wind-up protection in this system.
+
+    Therefore, anti-windup was necessary for the final PID controller. With the same gains,
+    the controller with anti-windup was significantly more stable and controllable than the
+    version without it.
+  
+</ol>
+
+<figure class="mt-2 mb-0 text-center">
+  <video class="img-fluid rounded border d-block mx-auto"
+         controls
+         style="max-width: 300px;">
+    <source src="figures/5.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <figcaption class="text-muted small mt-1 text-center">
+    Video 5 PID control with P = 0.5, I = 0.02, and D = 1.5, but without anti-windup. The robot accumulated excessive integral action and crashed into the wall.
+  </figcaption>
+</figure>
+
+<h3 class="h5 mt-4">Anti-Windup Implementation</h3>
+<pre class="bg-light p-3 rounded border"><code class="language-cpp">
+if (anti_windup_enable)
+{
+  if (I_term > ITERM_MAX) I_term = ITERM_MAX;
+  if (I_term < -ITERM_MAX) I_term = -ITERM_MAX;
+
+  if (fabs(Ki_pos) > 1e-6f)
+  {
+    error_integral = I_term / Ki_pos;
+  }
+}
+</code></pre>
+if (I_term > ITERM_MAX) I_term = ITERM_MAX;
+if (I_term < -ITERM_MAX) I_term = -ITERM_MAX;
+
+if (fabs(Ki_pos) > 1e-6f)
+{
+  error_integral = I_term / Ki_pos;
+}
+
+<ol>
+Anti-windup was implemented by clamping the integral term and keeping the internal integral state consistent with the clamped value.
+</ol>
+<h3 class="h5 mt-4">Conclusion</h3>
+<ol>
+  <li>
+    The comparison between <strong>Video 4</strong> and <strong>Video 5</strong> shows that
+    anti-windup is essential for preventing excessive overshoot in the final PID controller.
+  </li>
+
+  <li>
+    Without anti-windup, the integral term can continue to grow while the motor output is
+    already saturated, which makes the robot much more likely to overshoot or collide with
+    the wall. With anti-windup enabled, the same PID gains produced a much safer and more
+    stable stopping response.
+  </li>
+</ol>
+
+
+
+<!-- ===================== Appendix ===================== -->
+<section id="appendix" class="mt-5">
+  <h2 class="mb-3">Appendix</h2>
+
+  <!-- 1) AI Usage -->
+  <h3 class="h5 mt-4">1. An announcement of AI usage</h3>
+  <p style="text-align: justify;">
+    I used AI tools to support parts of this lab, mainly for webpage/HTML formatting, minor code edits and debugging,
+    and polishing the written explanations for clarity and conciseness. Throughout the assignment, I verified the
+    suggestions against the lab requirements, tested changes on my own setup, and made final design and implementation
+    decisions independently based on my own understanding.
+  </p>
