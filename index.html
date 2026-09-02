@@ -280,6 +280,29 @@
       margin-top: 8px;
     }
 
+    .duty-list {
+      margin-top: 12px;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.58;
+    }
+
+    .duty-list li + li {
+      margin-top: 6px;
+    }
+
+    .contact-line {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+
+    section[id] {
+      scroll-margin-top: 82px;
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -309,9 +332,10 @@
 
     .pub-list,
     .link-list,
+    .experience-list,
     .award-list {
       display: grid;
-      gap: 12px;
+      gap: 14px;
     }
 
     .pub-item,
@@ -505,7 +529,6 @@
                 </p>
           </div>
         </div>
-      </div>
     </section>
 
     <section id="academic">
@@ -559,6 +582,7 @@
           <h2>📚 Publications</h2>
         </div>
 
+        <div class="pub-list">
         <article class="pub-item card">
           <h3>Optimizing Path Planning and Conflict Resolution in High-Density AS/RS With a Multishuttle Cooperative Scheduling Framework</h3>
           <p class="small">
@@ -593,6 +617,9 @@
             <a class="mini-link" href="https://pubs.aip.org/aip/acp/article-abstract/3017/1/020002/2921493/Endoscopic-based-3D-reconstruction-methods-of?redirectedFrom=fulltext" target="_blank">Paper / Details</a>
           </div>
         </article>
+        </div>
+      </div>
+    </section>
 
     <section id="research">
       <div class="wrap">
@@ -626,6 +653,7 @@
           <h2>🚀 Projects</h2>
         </div>
 
+        <div class="link-list">
         <article class="link-item card">
           <h3>Hierarchical Multi-Agent Reinforcement Learning for Dynamic UAV Corridor Access Control</h3>
           <p class="small">
@@ -743,6 +771,7 @@
           <h2>💼 Work, Internship & TA Experience</h2>
         </div>
 
+        <div class="experience-list">
             <article class="info-card card">
               <h3>Teaching Assistant</h3>
               <div class="meta">Cornell University · ECE/ENGRD 2720 Data Science for Engineers</div>
@@ -843,6 +872,9 @@
     <span class="tag">Chip Testing</span>
   </div>
 </article>
+        </div>
+      </div>
+    </section>
 
     <section id="awards">
       <div class="wrap">
