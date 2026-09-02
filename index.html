@@ -666,12 +666,7 @@
 <article class="link-item card">
   <h3>Raspberry Pi Based Smart Classroom Assistant</h3>
   <p class="small">
-    Designed and implemented a distributed smart classroom control system with a Raspberry Pi as the central controller
-    and two ESP8266 boards as peripheral execution nodes. The Raspberry Pi handled PiTFT touchscreen interaction,
-    speech recognition, MQTT communication, and global state management, while the ESP8266 nodes collected sensor data
-    and controlled classroom devices including lighting, fan, heater, and projection-screen motor modules. The system
-    integrated environmental sensing, multi-mode scene control, command priority handling, and stable device coordination
-    into an end-to-end embedded IoT prototype.
+    Built a distributed smart-classroom control and voice-interaction system using a Raspberry Pi central node and two ESP8266 edge nodes. I was responsible for the hardware architecture, environmental-control firmware, and end-to-end system integration. The system used Mosquitto MQTT for temperature and illuminance sensing and for controlling the fan, heater, lighting, projector, and motorized screen, with event-driven topic separation, Wi-Fi/MQTT reconnection, local edge control, three-state temperature regulation, closed-loop lighting adjustment, device interlocks, non-blocking motor control, and a PiTFT/Vosk-based local voice interface.
   </p>
 
   <div class="tag-row">
@@ -692,7 +687,9 @@
 
           <article class="link-item card">
             <h3>Option Pricing and Hedging with Calibrated SDE Models</h3>
-            <p class="small">Neural Heston SDE modeling, Monte Carlo pricing, parameter calibration, robust pricing bounds, and neural-network-based hedging.</p>
+            <p class="small">
+    Developed a quantitative modeling pipeline using real SPY option data, differentiable Monte Carlo calibration of the Heston stochastic differential equation, uncertainty-aware pricing intervals, and neural-network-based dynamic hedging. I built the option-data pipeline and helped design controlled Heston-vs-GBM experiments with consistent data splits, random seeds, simulation budgets, and pricing metrics. For a market option priced at about 25.00, the calibrated pricing interval was [24.11, 26.33]; on 20,000 independent simulated paths, the neural hedging strategy reduced hedging-residual variance by 71.46% relative to the GBM-based baseline.
+  </p>
             <div class="tag-row">
               <span class="tag">Neural SDE</span><span class="tag">SPY Options</span><span class="tag">Monte Carlo</span><span class="tag">PyTorch</span>
             </div>
@@ -704,7 +701,9 @@
 
           <article class="link-item card">
             <h3>Cooperative Multi-Agent Learning in Overcooked-AI</h3>
-            <p class="small">Cooperative Markov game, reward shaping, policy behavior analysis, training curves, and multi-agent coordination in shared environments.</p>
+            <p class="small">
+    Built and analyzed hierarchical coordination strategies for cooperative agents in Overcooked-AI. I developed the two-agent Cook/Serve baseline using role state machines, BFS shortest-path planning, interaction-aware goal selection, and conflict detection for vertex and position-swap collisions. The hierarchical controller dynamically assigned Cook, Serve, and Support roles based on task stage, carried objects, distance, and bottleneck risk. Under the same map and 200-step budget, dynamic role assignment improved the two-agent result from 2 completed soups to 3, while the team’s three-agent extension completed 4.
+  </p>
             <div class="tag-row">
               <span class="tag">Multi-Agent RL</span><span class="tag">Overcooked-AI</span><span class="tag">Reward Design</span><span class="tag">Python</span>
             </div>
@@ -717,11 +716,8 @@
             <article class="link-item card">
               <h3>Cornell Fast Robots Course Design</h3>
               <p class="small">
-                Designed and implemented a dynamic autonomous robot system based on the Artemis Nano embedded platform.
-                The project involved integrating IMU and time-of-flight sensing, Bluetooth communication, sensor filtering,
-                state estimation, PID-based reactive control, mapping, localization, and path execution under real-world
-                latency and noise constraints.
-              </p>
+    Independently converted an RC car into a high-speed autonomous robot using an Artemis Nano, dual VL53L1X time-of-flight sensors, an ICM-20948 IMU, motor drivers, and a separate power system. I developed the Arduino/C++ firmware and Python/Jupyter host tools, implemented BLE-based mode switching, parameter updates, asynchronous telemetry and logging, and decoupled sensing, control, communication, and data recording. The robot used 25 Hz distance and heading PID control, gyro-bias calibration, dead-zone compensation, anti-windup, active braking, a discrete Kalman filter for distance and velocity estimation, 360° ToF mapping, Bayesian grid localization, and hierarchical waypoint navigation; it ultimately completed 9 waypoints autonomously without collision or human intervention.
+  </p>
             
               <div class="tag-row">
                 <span class="tag">Robotics</span>
@@ -900,4 +896,3 @@
   </footer>
 </body>
 </html>
-
